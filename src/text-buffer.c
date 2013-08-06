@@ -219,7 +219,7 @@ text_buffer_add_wchar( text_buffer_t * self,
     if( current == L'\n' )
     {
         pen->x = self->origin.x;
-        pen->y -= (int)(font->height);
+        pen->y += (int)(self->line_descender);
         self->line_descender = 0;
         self->line_ascender = 0;
         self->line_start = vector_size( self->buffer->items );

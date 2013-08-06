@@ -35,6 +35,7 @@ Flag use_font_config
 Library
   -- Modules exported by the library.
   Exposed-modules: Graphics.Rendering.FreeTypeGL,
+                   Graphics.Rendering.FreeTypeGL.Style,
                    Graphics.Rendering.FreeTypeGL.Internal.FontDesc,
                    Graphics.Rendering.FreeTypeGL.Internal.Shader,
                    Graphics.Rendering.FreeTypeGL.Internal.TextureFont,
@@ -44,7 +45,7 @@ Library
 
   -- Packages needed in order to build this package.
   -- "freetype2" and "OpenGL" deps are just for the C build side
-  Build-depends: base > 3 && < 5, freetype2 >= 0.1.2, OpenGL
+  Build-depends: base > 3 && < 5, freetype2 >= 0.1.2, OpenGL >= 2.8.0.0, data-default, linear
 
   -- Modules not exported by this package.
   -- Other-modules:

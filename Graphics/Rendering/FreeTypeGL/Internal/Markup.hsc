@@ -1,11 +1,16 @@
-{-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls #-}
-module Graphics.Rendering.FreeTypeGL.Internal.Markup(Markup(..), noMarkup) where
+{-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls, GeneralizedNewtypeDeriving #-}
+module Graphics.Rendering.FreeTypeGL.Internal.Markup
+( Markup(..), noMarkup, MarkStyle(..), MarkSpan(..), Marked(..), addStyle
+) where
 
 import Control.Applicative ((<$>), (<*>))
+import Data.Default
+import Data.Monoid
 import Foreign (Ptr, plusPtr)
 import Foreign.C.Types (CInt)
 import Foreign.Storable (Storable(..))
 import Graphics.Rendering.OpenGL.GL (Color4(..))
+import Linear
 
 peekColor :: Ptr Float -> IO (Color4 Float)
 peekColor ptr = Color4 <$> p 0 <*> p 1 <*> p 2 <*> p 3
@@ -44,6 +49,9 @@ noMarkup = Markup
   , overline = Nothing
   , strikethrough = Nothing
   }
+
+instance Default Markup where
+  def = noMarkup
 
 #include "markup.h"
 
@@ -97,3 +105,32 @@ instance Storable Markup where
     pokeAnnotation underlinePtrs underline'
     pokeAnnotation overlinePtrs overline'
     pokeAnnotation strikethroughPtrs strikethrough'
+
+data MarkStyle
+    = MSGamma !Float
+    | MSForegroundColor !(V4 Float)
+    | MSBackgroundColor !(V4 Float)
+    | MSUnderline !Bool
+    | MSOverline !Bool
+    | MSStrikethrough !Bool
+    deriving (Eq, Ord, Show, Read)
+
+data MarkSpan
+    = SpanStyle !MarkStyle
+    | SpanString String
+    deriving (Eq, Ord, Show, Read)
+
+newtype Marked = Marked [MarkSpan]
+    deriving (Eq, Ord, Show, Monoid)
+
+addStyle :: MarkStyle -> Markup -> Markup
+addStyle mstyle markup = case mstyle of
+    MSGamma f -> markup { gamma = f }
+    MSForegroundColor (V4 r g b a) -> markup { foreground_color = Color4 r g b a }
+    MSBackgroundColor (V4 r g b a) -> markup { background_color = Color4 r g b a }
+    MSUnderline True -> markup { underline = Just (foreground_color markup) }
+    MSUnderline False -> markup { underline = Nothing }
+    MSOverline True -> markup { overline = Just (foreground_color markup) }
+    MSOverline False -> markup { overline = Nothing }
+    MSStrikethrough True -> markup { strikethrough = Just (foreground_color markup) }
+    MSStrikethrough False -> markup { strikethrough = Nothing }

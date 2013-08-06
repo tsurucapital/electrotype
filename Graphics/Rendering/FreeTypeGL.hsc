@@ -25,16 +25,19 @@ module Graphics.Rendering.FreeTypeGL
   , Markup(..), noMarkup
   , TextRenderer(..), textRenderer
   , prepareRenderText, renderText, setText, appendText
+  , setRendererContents
   , Vector2(..), Color4(..)
   ) where
 
+import Control.Monad
+import Data.Monoid
 import Foreign.C.String (withCString)
 import Foreign.C.Types (CInt(..))
 import Foreign.ForeignPtr (ForeignPtr)
 import Foreign.Marshal.Alloc (malloc, free)
 import Foreign.Marshal.Error (throwIf_)
 import Foreign.Storable (peek, poke)
-import Graphics.Rendering.FreeTypeGL.Internal.Markup (Markup(..), noMarkup)
+import Graphics.Rendering.FreeTypeGL.Internal.Markup
 import Graphics.Rendering.FreeTypeGL.Internal.Shader (Shader)
 import Graphics.Rendering.FreeTypeGL.Internal.TextureFont (IsLCD(..))
 import Graphics.Rendering.OpenGL.GL (Color4(..), Vector2(..))
@@ -125,6 +128,7 @@ textRenderer (Font shader font) = do
   textBuffer <- ITB.new shader (Vector2 512 512) 1
   return $ TextRenderer textBuffer (Font shader font) (Vector2 0 0)
 
+-- | Append text to the end of a TextRenderer.
 appendText :: TextRenderer -> Markup -> String -> IO TextRenderer
 appendText (TextRenderer textBuffer (Font shader font) pos) markup str = do
   pen <- malloc
@@ -137,13 +141,14 @@ appendText (TextRenderer textBuffer (Font shader font) pos) markup str = do
   free pen
   return $ TextRenderer textBuffer (Font shader font) newPos
 
+-- | Replace all existing text in a TextRenderer.
 setText :: TextRenderer -> Markup -> String -> IO TextRenderer
 setText (TextRenderer textBuffer font _pos) markup str = do
   ITB.clearText textBuffer
   appendText (TextRenderer textBuffer font (Vector2 0 0)) markup str
 
 prepareRenderText :: TextRenderer -> IO ()
-prepareRenderText = ITB.prepareRender . trBuffer
+prepareRenderText tr = ITB.prepareRender =<< (trBuffer `fmap` appendText tr noMarkup "")
 
 -- | Render a 'TextRenderer' to the GL context
 --
@@ -169,3 +174,17 @@ renderText = ITB.render . trBuffer
 -- use the faster 'textSize' function.
 textRendererSize :: TextRenderer -> Vector2 Float
 textRendererSize = trSize
+
+renderSpans :: Markup -> Maybe String -> [MarkSpan] -> [TextRenderer -> IO TextRenderer]
+renderSpans _ Nothing [] = []
+renderSpans markup (Just str) [] = [\tr -> appendText tr markup str]
+renderSpans markup Nothing (SpanStyle ms : rest) = renderSpans (addStyle ms markup) Nothing rest
+renderSpans markup Nothing (SpanString str : rest) = renderSpans markup (Just str) rest
+renderSpans markup (Just str) (SpanStyle ms : rest) =
+    [\tr -> appendText tr markup str] ++ renderSpans (addStyle ms markup) Nothing rest
+renderSpans markup (Just str1) (SpanString str2 : rest) =
+    renderSpans markup (Just (str1 `mappend` str2)) rest
+
+setRendererContents :: TextRenderer -> Marked -> IO TextRenderer
+setRendererContents renderer (Marked marks) =
+    foldM (flip ($)) renderer (renderSpans noMarkup Nothing marks)
