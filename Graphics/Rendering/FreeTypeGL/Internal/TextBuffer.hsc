@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls #-}
 module Graphics.Rendering.FreeTypeGL.Internal.TextBuffer
-  ( TextBuffer, new, render, addText
+  ( TextBuffer, new, render, addText, clearText
   , Pen, Vector2(..)
   ) where
 
@@ -32,6 +32,9 @@ type Pen = Vector2 Float
 foreign import ccall "text_buffer_add_text"
   c_text_buffer_add_text :: Ptr TextBuffer -> Ptr Pen -> Ptr Markup -> Ptr TextureFont -> CWString -> IO CInt
 
+foreign import ccall "text_buffer_clear_text"
+  c_text_buffer_clear_text :: Ptr TextBuffer -> IO CInt
+
 foreign import ccall "&text_buffer_delete"
   c_text_buffer_delete :: FunPtr (Ptr TextBuffer -> IO ())
 
@@ -54,3 +57,7 @@ addText textBuffer markup font pen str =
   withForeignPtr textBuffer $ \textBufferPtr ->
   withForeignPtr font $ \fontPtr ->
   c_text_buffer_add_text textBufferPtr pen markup fontPtr strPtr
+
+clearText :: ForeignPtr TextBuffer -> IO ()
+clearText textBuffer = withForeignPtr textBuffer $ \textBufferPtr ->
+    c_text_buffer_clear_text textBufferPtr >> return ()

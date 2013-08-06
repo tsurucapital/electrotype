@@ -168,6 +168,8 @@ text_buffer_add_text( text_buffer_t * self,
                       texture_font_t * font,
                       wchar_t * text );
 
+int text_buffer_clear_text(text_buffer_t *self);
+
 /** @} */
 
 #ifdef __cplusplus

@@ -64,6 +64,16 @@ text_buffer_delete( text_buffer_t *self )
     free (self);
 }
 
+int text_buffer_clear_text( text_buffer_t *self )
+{
+    vertex_buffer_delete(self->buffer);
+    self->buffer = vertex_buffer_new( "v3f:t2f:c4f:1g1f:2g1f" );
+    self->line_start = 0;
+    self->line_ascender = 0;
+    self->line_descender = 0;
+    return 0;
+}
+
 // ----------------------------------------------------------------------------
 void
 text_buffer_render( text_buffer_t * self )

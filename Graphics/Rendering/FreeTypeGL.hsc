@@ -23,7 +23,7 @@ module Graphics.Rendering.FreeTypeGL
   , Shader, newShader
   , Font, loadFont, textSize
   , Markup(..), noMarkup
-  , TextRenderer, textRenderer, textRendererSize, renderText
+  , TextRenderer, textRenderer, textRendererSize, renderText, setText
   , Vector2(..), Color4(..)
   ) where
 
@@ -119,19 +119,24 @@ data TextRenderer = TextRenderer
   }
 
 -- | Make a 'TextRenderer' for a given font.
-textRenderer :: Markup -> Font -> String -> IO TextRenderer
-textRenderer markup (Font shader font) str = do
+textRenderer :: Font -> IO TextRenderer
+textRenderer (Font shader font) = do
+  textBuffer <- ITB.new shader (Vector2 512 512) 1
+  let textRend = TextRenderer textBuffer (Vector2 0 0)
+  return textRend
+
+setText :: TextRenderer -> Markup -> Font -> String -> IO ()
+setText (TextRenderer textBuffer pos) markup (Font _shader font) str = do
+  ITB.clearText textBuffer
   pen <- malloc
   markupPtr <- malloc
   poke pen (Vector2 0 0)
   poke markupPtr markup
-  textBuffer <- ITB.new shader (Vector2 512 512) 1
   ITB.addText textBuffer markupPtr font pen str
-  newPos <- peek pen
-  let textRend = TextRenderer textBuffer newPos
+  --newPos <- peek pen
+  --let textRend = TextRenderer textBuffer newPos
   free markupPtr
   free pen
-  return textRend
 
 -- | Render a 'TextRenderer' to the GL context
 --
