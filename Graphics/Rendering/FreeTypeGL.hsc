@@ -30,7 +30,7 @@ module Graphics.Rendering.FreeTypeGL
 import Foreign.C.String (withCString)
 import Foreign.C.Types (CInt(..))
 import Foreign.ForeignPtr (ForeignPtr)
-import Foreign.Marshal.Alloc (alloca)
+import Foreign.Marshal.Alloc (malloc, free)
 import Foreign.Marshal.Error (throwIf_)
 import Foreign.Storable (peek, poke)
 import Graphics.Rendering.FreeTypeGL.Internal.Markup (Markup(..), noMarkup)
@@ -119,16 +119,19 @@ data TextRenderer = TextRenderer
   }
 
 -- | Make a 'TextRenderer' for a given font.
-textRenderer :: Markup -> Font -> String -> TextRenderer
-textRenderer markup (Font shader font) str = unsafePerformIO $
-  alloca $ \pen ->
-  alloca $ \markupPtr -> do
-    poke pen (Vector2 0 0)
-    poke markupPtr markup
-    textBuffer <- ITB.new shader (Vector2 512 512) 1
-    ITB.addText textBuffer markupPtr font pen str
-    newPos <- peek pen
-    return $ TextRenderer textBuffer newPos
+textRenderer :: Markup -> Font -> String -> IO TextRenderer
+textRenderer markup (Font shader font) str = do
+  pen <- malloc
+  markupPtr <- malloc
+  poke pen (Vector2 0 0)
+  poke markupPtr markup
+  textBuffer <- ITB.new shader (Vector2 512 512) 1
+  ITB.addText textBuffer markupPtr font pen str
+  newPos <- peek pen
+  let textRend = TextRenderer textBuffer newPos
+  free markupPtr
+  free pen
+  return textRend
 
 -- | Render a 'TextRenderer' to the GL context
 --

@@ -250,7 +250,8 @@ void texture_atlas_clear( texture_atlas_t * self )
 void
 texture_atlas_upload( texture_atlas_t * self )
 {
-    if(self->uploaded) return;
+    // TODO: Optimize unnecessary exchanges with the GPU
+    // if(self->uploaded) return;
     if(!self->id) glGenTextures( 1, &self->id );
 
     glBindTexture( GL_TEXTURE_2D, self->id );

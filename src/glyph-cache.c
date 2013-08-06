@@ -53,6 +53,7 @@ void glyph_cache_fini(glyph_cache_t *self)
         texture_glyph_delete(glyph);
     }
     vector_delete(self->glyphs);
+    texture_atlas_fini(&self->atlas);
 }
 
 static texture_glyph_t *glyph_cache_load_glyph(

@@ -60,6 +60,7 @@ void
 text_buffer_delete( text_buffer_t *self )
 {
     vertex_buffer_delete(self->buffer);
+    glyph_cache_fini(&self->cache);
     free (self);
 }
 

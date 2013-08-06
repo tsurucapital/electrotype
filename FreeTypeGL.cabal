@@ -1,5 +1,5 @@
 Name:                FreeTypeGL
-Version:             0.0.4
+Version:             0.1.0.0
 Synopsis:            Loadable texture fonts for OpenGL.
 
 Description:         Based on the freetype-gl library, with large
@@ -16,6 +16,10 @@ Description:         Based on the freetype-gl library, with large
                      are out-of-date, as the C side was heavily
                      modified, without updating many of the demos or
                      the C documentation.
+                     .
+                     This package is experimental, buggy, and unoptimized. It
+                     requires the OpenGL Compatibility profile, though a
+                     near-term goal is to make it function in the Core profile.
 
 License:             BSD3
 License-file:        LICENSE
@@ -83,16 +87,3 @@ Library
 source-repository head
   type: git
   location: git://github.com/Peaker/FreeTypeGL.git
-
-Flag examples
-  Description: Build example programs
-  Default: False
-
-Executable hellobye
-  Main-is:       demos/hellobye.hs
-  if !flag(examples)
-    Buildable:     False
-  else
-    Buildable:     True
-    Build-depends: base > 3 && < 5, FreeTypeGL, GLFW-b, OpenGL
-    ghc-options:   -Wall
