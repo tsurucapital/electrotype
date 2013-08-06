@@ -2,20 +2,10 @@ Name:                FreeTypeGL
 Version:             0.1.0.0
 Synopsis:            Loadable texture fonts for OpenGL.
 
-Description:         Based on the freetype-gl library, with large
-                     modifications.
+Description:         Render text in OpenGL using texture-mapped fonts.
                      .
-                     This is similar to the FTGL (<http://hackage.haskell.org/package/FTGL>)
-                     library, but avoids C++, which makes it easier to wrap and work with
-                     in Haskell-land.
-                     .
-                     Unfortunately, it seems not to perform as well as
-                     FTGL on some setups.
-                     .
-                     NOTE: Most of the demos and C-side documentation
-                     are out-of-date, as the C side was heavily
-                     modified, without updating many of the demos or
-                     the C documentation.
+                     Similar to FTGL, but with fewer features (no
+                     mesh-from-font creation, no direct pixel rendering).
                      .
                      This package is experimental, buggy, and unoptimized. It
                      requires the OpenGL Compatibility profile, though a
@@ -23,8 +13,8 @@ Description:         Based on the freetype-gl library, with large
 
 License:             BSD3
 License-file:        LICENSE
-Author:              Eyal Lotem <eyal.lotem@gmail.com>
-Maintainer:          Eyal Lotem <eyal.lotem@gmail.com>
+Author:              Eyal Lotem <eyal.lotem@gmail.com>, Andrew Richards <randrew@gmail.com>
+Maintainer:          Eyal Lotem <eyal.lotem@gmail.com>, Andrew Richards <randrew@gmail.com>
 Category:            Graphics
 Build-type:          Simple
 Extra-source-files:  src/*.[ch]
@@ -86,4 +76,4 @@ Library
 
 source-repository head
   type: git
-  location: git://github.com/Peaker/FreeTypeGL.git
+  location: git://github.com/randrew/FreeTypeGL.git

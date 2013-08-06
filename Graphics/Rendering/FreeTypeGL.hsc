@@ -21,9 +21,9 @@
 module Graphics.Rendering.FreeTypeGL
   ( FontDesc(..), fontDescFindFileName
   , Shader, newShader
-  , Font, loadFont, textSize
+  , Font(fFont), loadFont, textRendererSize
   , Markup(..), noMarkup
-  , TextRenderer(..), textRenderer, textRendererSize
+  , TextRenderer(..), textRenderer
   , prepareRenderText, renderText, setText, appendText
   , Vector2(..), Color4(..)
   ) where
@@ -39,7 +39,6 @@ import Graphics.Rendering.FreeTypeGL.Internal.Shader (Shader)
 import Graphics.Rendering.FreeTypeGL.Internal.TextureFont (IsLCD(..))
 import Graphics.Rendering.OpenGL.GL (Color4(..), Vector2(..))
 import Paths_FreeTypeGL (getDataFileName)
-import System.IO.Unsafe (unsafePerformIO)  -- for pure textWidth
 import qualified Graphics.Rendering.FreeTypeGL.Internal.FontDesc as IFD
 import qualified Graphics.Rendering.FreeTypeGL.Internal.Shader as Shader
 import qualified Graphics.Rendering.FreeTypeGL.Internal.TextBuffer as ITB
@@ -170,11 +169,3 @@ renderText = ITB.render . trBuffer
 -- use the faster 'textSize' function.
 textRendererSize :: TextRenderer -> Vector2 Float
 textRendererSize = trSize
-
--- | Compute the text size of a given text in a given font
---
--- NOTE: If you also need to render the text, it is better to make a
--- 'TextRenderer'.
-textSize :: Font -> String -> Vector2 Float
-textSize font str =
-  unsafePerformIO $ ITF.textSize (fFont font) str
