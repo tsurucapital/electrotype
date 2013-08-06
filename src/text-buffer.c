@@ -74,16 +74,19 @@ int text_buffer_clear_text( text_buffer_t *self )
     return 0;
 }
 
-// ----------------------------------------------------------------------------
-void
-text_buffer_render( text_buffer_t * self )
+void text_buffer_prepare_render( text_buffer_t * self )
 {
     texture_atlas_upload(&self->cache.atlas);
 
     glEnable( GL_BLEND );
     glEnable( GL_TEXTURE_2D );
     glColor4f( 1.0, 1.0, 1.0, 1.0);
+}
 
+// ----------------------------------------------------------------------------
+void
+text_buffer_render( text_buffer_t * self )
+{
     if( self->cache.atlas.depth == 1 ) {
         glDisable( GL_COLOR_MATERIAL );
         glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -216,7 +219,7 @@ text_buffer_add_wchar( text_buffer_t * self,
     if( current == L'\n' )
     {
         pen->x = self->origin.x;
-        pen->y += (int)(self->line_descender);
+        pen->y -= (int)(font->height);
         self->line_descender = 0;
         self->line_ascender = 0;
         self->line_start = vector_size( self->buffer->items );

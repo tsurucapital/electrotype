@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls #-}
 module Graphics.Rendering.FreeTypeGL.Internal.TextBuffer
-  ( TextBuffer, new, render, addText, clearText
+  ( TextBuffer, new, prepareRender, render, addText, clearText
   , Pen, Vector2(..)
   ) where
 
@@ -24,6 +24,9 @@ data TextBuffer
 foreign import ccall "text_buffer_new"
   c_text_buffer_new :: Shader -> Ptr (Vector2 CInt) -> CInt -> IO (Ptr TextBuffer)
 
+foreign import ccall "text_buffer_prepare_render"
+  c_text_buffer_prepare_render :: Ptr TextBuffer -> IO ()
+
 foreign import ccall "text_buffer_render"
   c_text_buffer_render :: Ptr TextBuffer -> IO ()
 
@@ -44,6 +47,9 @@ new shader atlasSize depth =
     poke sizePtr $ fromIntegral <$> atlasSize
     newForeignPtr c_text_buffer_delete =<<
       c_text_buffer_new shader sizePtr (fromIntegral depth)
+
+prepareRender :: ForeignPtr TextBuffer -> IO ()
+prepareRender = flip withForeignPtr c_text_buffer_prepare_render
 
 render :: ForeignPtr TextBuffer -> IO ()
 render = flip withForeignPtr c_text_buffer_render

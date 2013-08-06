@@ -23,7 +23,8 @@ module Graphics.Rendering.FreeTypeGL
   , Shader, newShader
   , Font, loadFont, textSize
   , Markup(..), noMarkup
-  , TextRenderer, textRenderer, textRendererSize, renderText, setText
+  , TextRenderer(..), textRenderer, textRendererSize
+  , prepareRenderText, renderText, setText, appendText
   , Vector2(..), Color4(..)
   ) where
 
@@ -115,6 +116,7 @@ loadFont shader fileName size = do
 -- than computing the same renderer multiple times.
 data TextRenderer = TextRenderer
   { trBuffer :: ForeignPtr ITB.TextBuffer
+  , trFont :: Font
   , trSize :: Vector2 Float
   }
 
@@ -122,21 +124,27 @@ data TextRenderer = TextRenderer
 textRenderer :: Font -> IO TextRenderer
 textRenderer (Font shader font) = do
   textBuffer <- ITB.new shader (Vector2 512 512) 1
-  let textRend = TextRenderer textBuffer (Vector2 0 0)
-  return textRend
+  return $ TextRenderer textBuffer (Font shader font) (Vector2 0 0)
 
-setText :: TextRenderer -> Markup -> Font -> String -> IO ()
-setText (TextRenderer textBuffer pos) markup (Font _shader font) str = do
-  ITB.clearText textBuffer
+appendText :: TextRenderer -> Markup -> String -> IO TextRenderer
+appendText (TextRenderer textBuffer (Font shader font) pos) markup str = do
   pen <- malloc
   markupPtr <- malloc
-  poke pen (Vector2 0 0)
+  poke pen pos
   poke markupPtr markup
   ITB.addText textBuffer markupPtr font pen str
-  --newPos <- peek pen
-  --let textRend = TextRenderer textBuffer newPos
+  newPos <- peek pen
   free markupPtr
   free pen
+  return $ TextRenderer textBuffer (Font shader font) newPos
+
+setText :: TextRenderer -> Markup -> String -> IO TextRenderer
+setText (TextRenderer textBuffer font _pos) markup str = do
+  ITB.clearText textBuffer
+  appendText (TextRenderer textBuffer font (Vector2 0 0)) markup str
+
+prepareRenderText :: TextRenderer -> IO ()
+prepareRenderText = ITB.prepareRender . trBuffer
 
 -- | Render a 'TextRenderer' to the GL context
 --

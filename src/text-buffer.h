@@ -141,6 +141,12 @@ text_buffer_t *text_buffer_new( GLuint shader, const ivec2 *size, int depth );
 void
 text_buffer_delete( text_buffer_t *self );
 
+/**
+ * Prepare a text buffer for rendering.
+ * Uploads the texture atlas.
+ */
+
+void text_buffer_prepare_render( text_buffer_t * self);
 
 /**
  * Render a text buffer.
