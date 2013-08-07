@@ -10,6 +10,7 @@ import Foreign (Ptr, plusPtr)
 import Foreign.C.Types (CInt)
 import Foreign.Storable (Storable(..))
 import Graphics.Rendering.OpenGL.GL (Color4(..))
+import Graphics.Rendering.FreeTypeGL.Internal.Font
 import Linear
 
 peekColor :: Ptr Float -> IO (Color4 Float)
@@ -113,12 +114,13 @@ data MarkStyle
     | MSUnderline !Bool
     | MSOverline !Bool
     | MSStrikethrough !Bool
-    deriving (Eq, Ord, Show, Read)
+    deriving (Eq, Ord, Show)
 
 data MarkSpan
     = SpanStyle !MarkStyle
+    | SpanFont Font
     | SpanString String
-    deriving (Eq, Ord, Show, Read)
+    deriving (Eq, Ord, Show)
 
 newtype Marked = Marked [MarkSpan]
     deriving (Eq, Ord, Show, Monoid)

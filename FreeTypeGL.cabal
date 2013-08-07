@@ -40,6 +40,7 @@ Library
                    Graphics.Rendering.FreeTypeGL.Internal.Shader,
                    Graphics.Rendering.FreeTypeGL.Internal.TextureFont,
                    Graphics.Rendering.FreeTypeGL.Internal.TextBuffer,
+                   Graphics.Rendering.FreeTypeGL.Internal.Font,
                    Graphics.Rendering.FreeTypeGL.Internal.Markup
   Other-modules:   Paths_FreeTypeGL
 

@@ -38,13 +38,12 @@ import Foreign.Marshal.Error (throwIf_)
 import Foreign.Storable (peek, poke)
 import Graphics.Rendering.FreeTypeGL.Internal.Markup
 import Graphics.Rendering.FreeTypeGL.Internal.Shader (Shader)
-import Graphics.Rendering.FreeTypeGL.Internal.TextureFont (IsLCD(..))
 import Graphics.Rendering.OpenGL.GL (Color4(..), Vector2(..))
 import Paths_FreeTypeGL (getDataFileName)
 import qualified Graphics.Rendering.FreeTypeGL.Internal.FontDesc as IFD
 import qualified Graphics.Rendering.FreeTypeGL.Internal.Shader as Shader
 import qualified Graphics.Rendering.FreeTypeGL.Internal.TextBuffer as ITB
-import qualified Graphics.Rendering.FreeTypeGL.Internal.TextureFont as ITF
+import Graphics.Rendering.FreeTypeGL.Internal.Font
 
 -- FontDesc:
 
@@ -91,26 +90,6 @@ newShader = do
   textFrag <- getDataFileName "shaders/text.frag"
   Shader.load textVert textFrag
 
--- Font:
-
--- | Represents a loaded font file with a configured face-size.
---
--- For different face sizes, you must load different fonts.
-data Font = Font
-  { _fShader :: Shader
-  , fFont :: ForeignPtr ITF.TextureFont
-  }
-
--- | Load a 'Font' with a given size.
-loadFont
-  :: Shader   -- ^ A shader created with 'newShader'
-  -> FilePath -- ^ The font filename (e.g: \"foo.ttf\")
-  -> Float    -- ^ The desired face-size
-  -> IO Font  -- ^ The result loaded font
-loadFont shader fileName size = do
-  textureFont <- ITF.new NotLCD fileName size
-  return $ Font shader textureFont
-
 -- | A 'TextRenderer' is an intermediate representation of all font
 -- renderings. It represents the GL program to render the font, and
 -- may be re-used multiple times.  Re-using a TextRenderer is faster
@@ -118,39 +97,38 @@ loadFont shader fileName size = do
 data TextRenderer = TextRenderer
   { trBuffer :: ForeignPtr ITB.TextBuffer
   , trPen :: ForeignPtr ITB.Pen
-  , trFont :: Font
   }
 
 -- | Make a 'TextRenderer' for a given font.
-textRenderer :: Font -> IO TextRenderer
-textRenderer (Font shader font) = do
+textRenderer :: Shader -> IO TextRenderer
+textRenderer shader = do
   textBuffer <- ITB.new shader (Vector2 512 512) 1
   penPtr <- malloc
   poke penPtr (Vector2 0 0)
   pen <- newForeignPtr finalizerFree penPtr
-  return $ TextRenderer textBuffer pen (Font shader font)
+  return $ TextRenderer textBuffer pen
 
 -- | Append text to the end of a TextRenderer.
-appendText :: TextRenderer -> Markup -> String -> IO ()
-appendText (TextRenderer textBuffer pen (Font _shader font)) markup str = do
+appendText :: TextRenderer -> Font -> Markup -> String -> IO ()
+appendText (TextRenderer textBuffer pen) (Font font) markup str = do
   markupPtr <- malloc
   poke markupPtr markup
   ITB.addText textBuffer markupPtr font pen str
   free markupPtr
 
 -- | Replace all existing text in a TextRenderer.
-setText :: TextRenderer -> Markup -> String -> IO ()
-setText tr markup str = do
+setText :: TextRenderer -> Font -> Markup -> String -> IO ()
+setText tr font markup str = do
   ITB.clearText (trBuffer tr)
   withForeignPtr (trPen tr) $ \pen ->
     poke pen (Vector2 0 0)
-  appendText tr markup str
+  appendText tr font markup str
 
-prepareRenderText :: TextRenderer -> IO ()
-prepareRenderText tr = do
+prepareRenderText :: TextRenderer -> Font -> IO ()
+prepareRenderText tr font = do
   -- One final empty append, to force any pending recalculation of line height.
   -- This could be done more elegantly.
-  appendText tr noMarkup ""
+  appendText tr font noMarkup ""
   ITB.prepareRender (trBuffer tr)
 
 -- | Render a 'TextRenderer' to the GL context
@@ -178,16 +156,20 @@ renderText = ITB.render . trBuffer
 textRendererSize :: TextRenderer -> IO (Vector2 Float)
 textRendererSize tr = withForeignPtr (trPen tr) peek
 
-renderSpans :: Markup -> Maybe String -> [MarkSpan] -> [TextRenderer -> IO ()]
-renderSpans _ Nothing [] = []
-renderSpans markup (Just str) [] = [\tr -> appendText tr markup str]
-renderSpans markup Nothing (SpanStyle ms : rest) = renderSpans (addStyle ms markup) Nothing rest
-renderSpans markup Nothing (SpanString str : rest) = renderSpans markup (Just str) rest
-renderSpans markup (Just str) (SpanStyle ms : rest) =
-    [\tr -> appendText tr markup str] ++ renderSpans (addStyle ms markup) Nothing rest
-renderSpans markup (Just str1) (SpanString str2 : rest) =
-    renderSpans markup (Just (str1 `mappend` str2)) rest
+renderSpans :: Font -> Markup -> Maybe String -> [MarkSpan] -> [TextRenderer -> IO ()]
+renderSpans _ _ Nothing [] = []
+renderSpans font markup (Just str) [] = [\tr -> appendText tr font markup str]
+renderSpans font markup Nothing (SpanStyle ms : rest) = renderSpans font (addStyle ms markup) Nothing rest
+renderSpans font markup Nothing (SpanString str : rest) = renderSpans font markup (Just str) rest
+renderSpans font markup (Just str) (SpanStyle ms : rest) =
+    [\tr -> appendText tr font markup str] ++ renderSpans font (addStyle ms markup) Nothing rest
+renderSpans oldFont markup (Just str) (SpanFont font : rest) =
+    [\tr -> appendText tr oldFont markup str] ++ renderSpans font markup Nothing rest
+renderSpans _    markup Nothing (SpanFont font : rest) =
+    renderSpans font markup Nothing rest
+renderSpans font markup (Just str1) (SpanString str2 : rest) =
+    renderSpans font markup (Just (str1 `mappend` str2)) rest
 
-setRendererContents :: TextRenderer -> Marked -> IO ()
-setRendererContents renderer (Marked marks) =
-     sequence_ $ map ($ renderer) (renderSpans noMarkup Nothing marks)
+setRendererContents :: TextRenderer -> Font -> Marked -> IO ()
+setRendererContents renderer font (Marked marks) =
+     sequence_ $ map ($ renderer) (renderSpans font noMarkup Nothing marks)
