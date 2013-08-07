@@ -54,7 +54,7 @@ prepareRender = flip withForeignPtr c_text_buffer_prepare_render
 render :: ForeignPtr TextBuffer -> IO ()
 render = flip withForeignPtr c_text_buffer_render
 
-addText :: ForeignPtr TextBuffer -> Ptr Markup -> ForeignPtr TextureFont -> Ptr Pen -> String -> IO ()
+addText :: ForeignPtr TextBuffer -> Ptr Markup -> ForeignPtr TextureFont -> ForeignPtr Pen -> String -> IO ()
 addText textBuffer markup font pen str =
   throwIf_ (/= 0)
   ((++ "Most likely cause: Out of atlas memory. Try to enlarge the atlas.") .
@@ -62,7 +62,8 @@ addText textBuffer markup font pen str =
   withCWString str $ \strPtr ->
   withForeignPtr textBuffer $ \textBufferPtr ->
   withForeignPtr font $ \fontPtr ->
-  c_text_buffer_add_text textBufferPtr pen markup fontPtr strPtr
+  withForeignPtr pen $ \penPtr ->
+  c_text_buffer_add_text textBufferPtr penPtr markup fontPtr strPtr
 
 clearText :: ForeignPtr TextBuffer -> IO ()
 clearText textBuffer = withForeignPtr textBuffer $ \textBufferPtr ->

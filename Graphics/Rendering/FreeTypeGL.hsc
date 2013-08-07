@@ -29,12 +29,11 @@ module Graphics.Rendering.FreeTypeGL
   , Vector2(..), Color4(..)
   ) where
 
-import Control.Monad
 import Data.Monoid
 import Foreign.C.String (withCString)
 import Foreign.C.Types (CInt(..))
-import Foreign.ForeignPtr (ForeignPtr)
-import Foreign.Marshal.Alloc (malloc, free)
+import Foreign.ForeignPtr
+import Foreign.Marshal.Alloc (malloc, free, finalizerFree)
 import Foreign.Marshal.Error (throwIf_)
 import Foreign.Storable (peek, poke)
 import Graphics.Rendering.FreeTypeGL.Internal.Markup
@@ -118,37 +117,41 @@ loadFont shader fileName size = do
 -- than computing the same renderer multiple times.
 data TextRenderer = TextRenderer
   { trBuffer :: ForeignPtr ITB.TextBuffer
+  , trPen :: ForeignPtr ITB.Pen
   , trFont :: Font
-  , trSize :: Vector2 Float
   }
 
 -- | Make a 'TextRenderer' for a given font.
 textRenderer :: Font -> IO TextRenderer
 textRenderer (Font shader font) = do
   textBuffer <- ITB.new shader (Vector2 512 512) 1
-  return $ TextRenderer textBuffer (Font shader font) (Vector2 0 0)
+  penPtr <- malloc
+  poke penPtr (Vector2 0 0)
+  pen <- newForeignPtr finalizerFree penPtr
+  return $ TextRenderer textBuffer pen (Font shader font)
 
 -- | Append text to the end of a TextRenderer.
-appendText :: TextRenderer -> Markup -> String -> IO TextRenderer
-appendText (TextRenderer textBuffer (Font shader font) pos) markup str = do
-  pen <- malloc
+appendText :: TextRenderer -> Markup -> String -> IO ()
+appendText (TextRenderer textBuffer pen (Font _shader font)) markup str = do
   markupPtr <- malloc
-  poke pen pos
   poke markupPtr markup
   ITB.addText textBuffer markupPtr font pen str
-  newPos <- peek pen
   free markupPtr
-  free pen
-  return $ TextRenderer textBuffer (Font shader font) newPos
 
 -- | Replace all existing text in a TextRenderer.
-setText :: TextRenderer -> Markup -> String -> IO TextRenderer
-setText (TextRenderer textBuffer font _pos) markup str = do
-  ITB.clearText textBuffer
-  appendText (TextRenderer textBuffer font (Vector2 0 0)) markup str
+setText :: TextRenderer -> Markup -> String -> IO ()
+setText tr markup str = do
+  ITB.clearText (trBuffer tr)
+  withForeignPtr (trPen tr) $ \pen ->
+    poke pen (Vector2 0 0)
+  appendText tr markup str
 
 prepareRenderText :: TextRenderer -> IO ()
-prepareRenderText tr = ITB.prepareRender =<< (trBuffer `fmap` appendText tr noMarkup "")
+prepareRenderText tr = do
+  -- One final empty append, to force any pending recalculation of line height.
+  -- This could be done more elegantly.
+  appendText tr noMarkup ""
+  ITB.prepareRender (trBuffer tr)
 
 -- | Render a 'TextRenderer' to the GL context
 --
@@ -172,10 +175,10 @@ renderText = ITB.render . trBuffer
 --
 -- NOTE: If you don't need to also render the text, it is better to
 -- use the faster 'textSize' function.
-textRendererSize :: TextRenderer -> Vector2 Float
-textRendererSize = trSize
+textRendererSize :: TextRenderer -> IO (Vector2 Float)
+textRendererSize tr = withForeignPtr (trPen tr) peek
 
-renderSpans :: Markup -> Maybe String -> [MarkSpan] -> [TextRenderer -> IO TextRenderer]
+renderSpans :: Markup -> Maybe String -> [MarkSpan] -> [TextRenderer -> IO ()]
 renderSpans _ Nothing [] = []
 renderSpans markup (Just str) [] = [\tr -> appendText tr markup str]
 renderSpans markup Nothing (SpanStyle ms : rest) = renderSpans (addStyle ms markup) Nothing rest
@@ -185,6 +188,6 @@ renderSpans markup (Just str) (SpanStyle ms : rest) =
 renderSpans markup (Just str1) (SpanString str2 : rest) =
     renderSpans markup (Just (str1 `mappend` str2)) rest
 
-setRendererContents :: TextRenderer -> Marked -> IO TextRenderer
+setRendererContents :: TextRenderer -> Marked -> IO ()
 setRendererContents renderer (Marked marks) =
-    foldM (flip ($)) renderer (renderSpans noMarkup Nothing marks)
+     sequence_ $ map ($ renderer) (renderSpans noMarkup Nothing marks)
