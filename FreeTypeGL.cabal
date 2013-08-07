@@ -46,7 +46,7 @@ Library
 
   -- Packages needed in order to build this package.
   -- "freetype2" and "OpenGL" deps are just for the C build side
-  Build-depends: base > 3 && < 5, freetype2 >= 0.1.2, OpenGL >= 2.8.0.0, data-default, linear
+  Build-depends: base > 3 && < 5, bytestring, freetype2 >= 0.1.2, OpenGL >= 2.8.0.0, data-default, linear
 
   -- Modules not exported by this package.
   -- Other-modules:
@@ -54,6 +54,7 @@ Library
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   Build-tools: hsc2hs
   ghc-options: -Wall
+  cc-options: -DNDEBUG
   include-dirs: src
   if os(windows)
     include-dirs: windows/include

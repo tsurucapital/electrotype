@@ -24,11 +24,13 @@ module Graphics.Rendering.FreeTypeGL
   , Font(fFont), loadFont, textRendererSize
   , Markup(..), noMarkup
   , TextRenderer(..), textRenderer
-  , prepareRenderText, renderText, setText, appendText
+  , prepareRenderText, renderText
+  , setText, appendText, setByteString, appendByteString
   , setRendererContents
   , Vector2(..), Color4(..)
   ) where
 
+import qualified Data.ByteString.Char8 as B
 import Data.Monoid
 import Foreign.C.String (withCString)
 import Foreign.C.Types (CInt(..))
@@ -116,6 +118,13 @@ appendText (TextRenderer textBuffer pen) (Font font) markup str = do
   ITB.addText textBuffer markupPtr font pen str
   free markupPtr
 
+appendByteString :: TextRenderer -> Font -> Markup -> B.ByteString -> IO ()
+appendByteString (TextRenderer textBuffer pen) (Font font) markup str = do
+  markupPtr <- malloc
+  poke markupPtr markup
+  ITB.addByteString textBuffer markupPtr font pen str
+  free markupPtr
+
 -- | Replace all existing text in a TextRenderer.
 setText :: TextRenderer -> Font -> Markup -> String -> IO ()
 setText tr font markup str = do
@@ -123,6 +132,13 @@ setText tr font markup str = do
   withForeignPtr (trPen tr) $ \pen ->
     poke pen (Vector2 0 0)
   appendText tr font markup str
+
+setByteString :: TextRenderer -> Font -> Markup -> B.ByteString -> IO ()
+setByteString tr font markup str = do
+  ITB.clearText (trBuffer tr)
+  withForeignPtr (trPen tr) $ \pen ->
+    poke pen (Vector2 0 0)
+  appendByteString tr font markup str
 
 prepareRenderText :: TextRenderer -> Font -> IO ()
 prepareRenderText tr font = do

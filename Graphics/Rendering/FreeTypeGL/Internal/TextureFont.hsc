@@ -16,16 +16,16 @@ import Graphics.Rendering.OpenGL.GL (Vector2(..))
 
 data TextureFont
 
-foreign import ccall "texture_font_new"
+foreign import ccall unsafe "texture_font_new"
   c_texture_font_new :: Bool -> CString -> CFloat -> IO (Ptr TextureFont)
 
-foreign import ccall "texture_font_get_text_size"
+foreign import ccall unsafe "texture_font_get_text_size"
   c_texture_font_get_text_size :: Ptr TextureFont -> CWString -> Ptr (Vector2 Float) -> IO CInt
 
-foreign import ccall "&texture_font_delete"
+foreign import ccall unsafe "&texture_font_delete"
   c_texture_font_delete :: FunPtr (Ptr TextureFont -> IO ())
 
-foreign import ccall "strdup"
+foreign import ccall unsafe "strdup"
   c_strdup :: CString -> IO CString
 
 data IsLCD = IsLCD | NotLCD

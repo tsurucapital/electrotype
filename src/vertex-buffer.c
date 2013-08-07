@@ -333,6 +333,7 @@ vertex_buffer_clear( vertex_buffer_t *self )
     self->state = FROZEN;
     vector_clear( self->indices );
     vector_clear( self->vertices );
+    vector_clear( self->items );
     self->state = DIRTY;
 }
 

@@ -174,6 +174,10 @@ text_buffer_add_text( text_buffer_t * self,
                       texture_font_t * font,
                       wchar_t * text );
 
+int text_buffer_add_text_char(
+    text_buffer_t * self, vec2 * pen, markup_t * markup,
+    texture_font_t * font, char * text, int len );
+
 int text_buffer_clear_text(text_buffer_t *self);
 
 /** @} */

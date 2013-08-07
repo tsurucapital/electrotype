@@ -1,12 +1,14 @@
 {-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls #-}
 module Graphics.Rendering.FreeTypeGL.Internal.TextBuffer
-  ( TextBuffer, new, prepareRender, render, addText, clearText
+  ( TextBuffer, new, prepareRender, render, addText, addByteString, clearText
   , Pen, Vector2(..)
   ) where
 
 import Control.Applicative ((<$>))
+import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.Unsafe as US
 import Foreign (FunPtr, Ptr)
-import Foreign.C.String (CWString, withCWString)
+import Foreign.C.String (CString, CWString, withCWString)
 import Foreign.C.Types (CUInt(..), CInt(..))
 import Foreign.ForeignPtr (ForeignPtr, withForeignPtr, newForeignPtr)
 import Foreign.Marshal.Alloc (alloca)
@@ -21,24 +23,27 @@ import Graphics.Rendering.OpenGL.GL (Vector2(..))
 
 data TextBuffer
 
-foreign import ccall "text_buffer_new"
+foreign import ccall unsafe "text_buffer_new"
   c_text_buffer_new :: Shader -> Ptr (Vector2 CInt) -> CInt -> IO (Ptr TextBuffer)
 
-foreign import ccall "text_buffer_prepare_render"
+foreign import ccall unsafe "text_buffer_prepare_render"
   c_text_buffer_prepare_render :: Ptr TextBuffer -> IO ()
 
-foreign import ccall "text_buffer_render"
+foreign import ccall unsafe "text_buffer_render"
   c_text_buffer_render :: Ptr TextBuffer -> IO ()
 
 type Pen = Vector2 Float
 
-foreign import ccall "text_buffer_add_text"
+foreign import ccall unsafe "text_buffer_add_text"
   c_text_buffer_add_text :: Ptr TextBuffer -> Ptr Pen -> Ptr Markup -> Ptr TextureFont -> CWString -> IO CInt
 
-foreign import ccall "text_buffer_clear_text"
+foreign import ccall unsafe "text_buffer_add_text_char"
+  c_text_buffer_add_text_char :: Ptr TextBuffer -> Ptr Pen -> Ptr Markup -> Ptr TextureFont -> CString -> Int -> IO CInt
+
+foreign import ccall unsafe "text_buffer_clear_text"
   c_text_buffer_clear_text :: Ptr TextBuffer -> IO CInt
 
-foreign import ccall "&text_buffer_delete"
+foreign import ccall unsafe "&text_buffer_delete"
   c_text_buffer_delete :: FunPtr (Ptr TextBuffer -> IO ())
 
 new :: Shader -> Vector2 Int -> Int -> IO (ForeignPtr TextBuffer)
@@ -64,6 +69,17 @@ addText textBuffer markup font pen str =
   withForeignPtr font $ \fontPtr ->
   withForeignPtr pen $ \penPtr ->
   c_text_buffer_add_text textBufferPtr penPtr markup fontPtr strPtr
+
+addByteString :: ForeignPtr TextBuffer -> Ptr Markup -> ForeignPtr TextureFont -> ForeignPtr Pen -> B.ByteString -> IO ()
+addByteString textBuffer markup font pen str =
+  throwIf_ (/= 0)
+  ((++ "Most likely cause: Out of atlas memory. Try to enlarge the atlas.") .
+   (("text_buffer_add_text " ++ show str ++ " returned: ") ++) . show) .
+  US.unsafeUseAsCStringLen str $ \(cstringPtr, len) ->
+  withForeignPtr textBuffer $ \textBufferPtr ->
+  withForeignPtr font $ \fontPtr ->
+  withForeignPtr pen $ \penPtr ->
+  c_text_buffer_add_text_char textBufferPtr penPtr markup fontPtr cstringPtr len
 
 clearText :: ForeignPtr TextBuffer -> IO ()
 clearText textBuffer = withForeignPtr textBuffer $ \textBufferPtr ->

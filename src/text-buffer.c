@@ -66,8 +66,7 @@ text_buffer_delete( text_buffer_t *self )
 
 int text_buffer_clear_text( text_buffer_t *self )
 {
-    vertex_buffer_delete(self->buffer);
-    self->buffer = vertex_buffer_new( "v3f:t2f:c4f:1g1f:2g1f" );
+    vertex_buffer_clear(self->buffer);
     self->line_start = 0;
     self->line_ascender = 0;
     self->line_descender = 0;
@@ -316,6 +315,51 @@ int text_buffer_add_text(
 
     size_t i;
     for( i=1; text[i]; ++i ) {
+        if(0 != (rc = text_buffer_add_wchar( self, pen, markup, font, text[i], text[i-1] ))) {
+            return rc;
+        }
+    }
+    return 0;
+}
+
+int text_buffer_add_text_char(
+    text_buffer_t * self, vec2 * pen, markup_t * markup,
+    texture_font_t * font, char * text, int len )
+{
+    vertex_buffer_t * buffer = self->buffer;
+
+    if( 0 == vertex_buffer_size( self->buffer ) ) self->origin = *pen;
+
+    if( font->ascender > self->line_ascender ) {
+        size_t i, j;
+        float dy = (int)(font->ascender - self->line_ascender);
+        for( i=self->line_start; i < vector_size( buffer->items ); ++i )
+        {
+            ivec4 *item = (ivec4 *) vector_get( buffer->items, i);
+            for( j=item->vstart; j<item->vstart+item->vcount; ++j)
+            {
+                glyph_vertex_t * vertex =
+                    (glyph_vertex_t *)  vector_get( buffer->vertices, j );
+                vertex->pos.y -= dy;
+            }
+        }
+        self->line_ascender = font->ascender;
+        pen->y -= dy;
+    }
+
+    if( font->descender < self->line_descender ) {
+        self->line_descender = font->descender;
+    }
+
+    if(!text[0]) return 0;
+
+    int rc;
+    if(0 != (rc = text_buffer_add_wchar( self, pen, markup, font, text[0], 0 ))) {
+        return rc;
+    }
+
+    size_t i;
+    for( i=1; i < len; ++i ) {
         if(0 != (rc = text_buffer_add_wchar( self, pen, markup, font, text[i], text[i-1] ))) {
             return rc;
         }
