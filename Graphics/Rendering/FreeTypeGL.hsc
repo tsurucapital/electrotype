@@ -35,7 +35,7 @@ import Data.Monoid
 import Foreign.C.String (withCString)
 import Foreign.C.Types (CInt(..))
 import Foreign.ForeignPtr
-import Foreign.Marshal.Alloc (malloc, free, finalizerFree)
+import Foreign.Marshal.Alloc (alloca, malloc, finalizerFree)
 import Foreign.Marshal.Error (throwIf_)
 import Foreign.Storable (peek, poke)
 import Graphics.Rendering.FreeTypeGL.Internal.Markup
@@ -112,18 +112,16 @@ textRenderer shader = do
 
 -- | Append text to the end of a TextRenderer.
 appendText :: TextRenderer -> Font -> Markup -> String -> IO ()
-appendText (TextRenderer textBuffer pen) (Font font) markup str = do
-  markupPtr <- malloc
+appendText (TextRenderer textBuffer pen) (Font font) markup str =
+  alloca $ \markupPtr -> do
   poke markupPtr markup
   ITB.addText textBuffer markupPtr font pen str
-  free markupPtr
 
 appendByteString :: TextRenderer -> Font -> Markup -> B.ByteString -> IO ()
 appendByteString (TextRenderer textBuffer pen) (Font font) markup str = do
-  markupPtr <- malloc
+  alloca $ \markupPtr -> do
   poke markupPtr markup
   ITB.addByteString textBuffer markupPtr font pen str
-  free markupPtr
 
 -- | Replace all existing text in a TextRenderer.
 setText :: TextRenderer -> Font -> Markup -> String -> IO ()
