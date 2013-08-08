@@ -38,11 +38,10 @@
 extern "C" {
 #endif
 
-#include "markup.h"
-#include "texture-atlas.h"
-#include "texture-font.h"
-#include "glyph-cache.h"
 #include "vertex-buffer.h"
+#include "font-manager.h"
+#include "markup.h"
+#include "shader.h"
 
 
 /**
@@ -81,11 +80,20 @@ extern "C" {
  */
 typedef struct {
     /**
-     * Vertex buffer
+     * Vertex buffer 
      */
     vertex_buffer_t *buffer;
 
-    glyph_cache_t cache;
+    /**
+     * Font manager 
+     */
+    font_manager_t *manager;
+
+    /**
+     * Base color for text
+     */
+    vec4 base_color;
+
 
     /**
      * Pen origin
@@ -124,29 +132,82 @@ typedef struct {
 
 } text_buffer_t;
 
+
+
+/**
+ * Glyph vertex structure
+ */
+typedef struct {
+    /**
+     * Vertex x coordinates
+     */
+    float x;
+
+    /**
+     * Vertex y coordinates
+     */
+    float y;
+
+    /**
+     * Vertex z coordinates
+     */
+    float z;
+
+    /**
+     * Texture first coordinate
+     */
+    float u;
+
+    /**
+     * Texture second coordinate
+     */
+    float v;
+
+    /**
+     * Color red component
+     */
+    float r;
+
+    /**
+     * Color green component
+     */
+    float g;
+
+    /**
+     * Color blue component
+     */
+    float b;
+
+    /**
+     * Color alpha component
+     */
+    float a;
+
+    /**
+     * Shift along x
+     */
+    float shift;
+
+    /**
+     * Color gamma correction
+     */
+    float gamma;
+
+} glyph_vertex_t;
+
+
+
 /**
  * Creates a new empty text buffer.
+ *
+ * @param depth  Underlying atlas bit depth (1 or 3)
  *
  * @return  a new empty text buffer.
  *
  */
-text_buffer_t *text_buffer_new( GLuint shader, const ivec2 *size, int depth );
+  text_buffer_t *
+  text_buffer_new( size_t depth );
 
-/**
- * Delete a text buffer.
- *
- * @param self a text buffer
- *
- */
-void
-text_buffer_delete( text_buffer_t *self );
-
-/**
- * Prepare a text buffer for rendering.
- * Uploads the texture atlas.
- */
-
-void text_buffer_prepare_render( text_buffer_t * self);
 
 /**
  * Render a text buffer.
@@ -154,8 +215,21 @@ void text_buffer_prepare_render( text_buffer_t * self);
  * @param self a text buffer
  *
  */
-void
-text_buffer_render( text_buffer_t * self );
+  void
+  text_buffer_render( text_buffer_t * self );
+
+
+ /**
+  * Print some text to the text buffer
+  *
+  * @param self a text buffer
+  * @param pen  position of text start
+  * @param ...  a series of markup_t *, wchar_t * ended by NULL
+  *
+  */
+  void
+  text_buffer_printf( text_buffer_t * self, vec2 * pen, ... );
+
 
  /**
   * Add some text to the text buffer
@@ -164,21 +238,35 @@ text_buffer_render( text_buffer_t * self );
   * @param pen    position of text start
   * @param markup Markup to be used to add text
   * @param text   Text to be added
-  * @param length Length of text to be added (or 0 for null termination)
-  *
-  * @return 0 for success.
+  * @param length Length of text to be added
   */
-int
-text_buffer_add_text( text_buffer_t * self,
-                      vec2 * pen, markup_t * markup,
-                      texture_font_t * font,
-                      wchar_t * text );
+  void
+  text_buffer_add_text( text_buffer_t * self,
+                        vec2 * pen, markup_t * markup,
+                        wchar_t * text, size_t length );
 
-int text_buffer_add_text_char(
-    text_buffer_t * self, vec2 * pen, markup_t * markup,
-    texture_font_t * font, char * text, int len );
+ /**
+  * Add a char to the text buffer
+  *
+  * @param self     a text buffer
+  * @param pen      position of text start
+  * @param markup   markup to be used to add text
+  * @param current  charactr to be added
+  * @param previous previous character (if any)
+  */
+  void
+  text_buffer_add_wchar( text_buffer_t * self,
+                         vec2 * pen, markup_t * markup,
+                         wchar_t current, wchar_t previous );
 
-int text_buffer_clear_text(text_buffer_t *self);
+/**
+  * Clear text buffer
+  *
+  * @param self a text buffer
+ */
+  void
+  text_buffer_clear( text_buffer_t * self );
+
 
 /** @} */
 

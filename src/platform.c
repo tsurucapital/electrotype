@@ -31,22 +31,35 @@
  * policies, either expressed or implied, of Nicolas P. Rougier.
  * ============================================================================
  */
-#ifndef __OPEN_GL_H__
-#define __OPEN_GL_H__
+#include <string.h>
+#include "platform.h"
 
+#if defined(_WIN32) || defined(_WIN64)
+
+#include <math.h>
+
+double round (float v)
+{
+	return floor(v+0.5f);
+}
+
+// strndup() is not available on Windows
+char *strndup( const char *s1, size_t n)
+{
+	char *copy= (char*)malloc( n+1 );
+	memcpy( copy, s1, n );
+	copy[n] = 0;
+	return copy;
+};
+#endif 
+
+
+// strndup() was only added in OSX lion
 #if defined(__APPLE__)
-#  ifdef GL_ES_VERSION_2_0
-#    include <OpenGLES/ES2/gl.h>
-#  else
-#    include <OpenGL/gl.h>
-#  endif
-#elif defined(_WIN32) || defined(_WIN64)
-#  define GLEW_STATIC
-#  include <GL/glew.h>
-#else
-#  define GL_GLEXT_PROTOTYPES
-#  include <GL/gl.h>
-#  include <GL/glext.h>
+char *strndup( const char *s1, size_t n)
+{
+    char *copy = calloc( n+1, sizeof(char) );
+    memcpy( copy, s1, n );
+    return copy;
+};
 #endif
-
-#endif /* OPEN_GL_H */

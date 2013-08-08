@@ -31,22 +31,39 @@
  * policies, either expressed or implied, of Nicolas P. Rougier.
  * ============================================================================
  */
-#ifndef __OPEN_GL_H__
-#define __OPEN_GL_H__
+#ifndef __PLATFORM_H__
+#define __PLATFORM_H__
 
-#if defined(__APPLE__)
-#  ifdef GL_ES_VERSION_2_0
-#    include <OpenGLES/ES2/gl.h>
-#  else
-#    include <OpenGL/gl.h>
-#  endif
-#elif defined(_WIN32) || defined(_WIN64)
-#  define GLEW_STATIC
-#  include <GL/glew.h>
+#include <stdlib.h>
+
+//-------------------------------------------------
+// stdint.h is not available on VS2008 or lower
+//-------------------------------------------------
+#ifdef _MSC_VER
+typedef __int32 int32_t;
+typedef unsigned __int32 uint32_t;
+typedef __int64 int64_t;
+typedef unsigned __int64 uint64_t;
 #else
-#  define GL_GLEXT_PROTOTYPES
-#  include <GL/gl.h>
-#  include <GL/glext.h>
+#include <stdint.h>
+#endif // _MSC_VER
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#endif /* OPEN_GL_H */
+#ifdef __APPLE__
+    /* strndup() was only added in OSX lion */
+    char * strndup( const char *s1, size_t n);
+#elif defined(_WIN32) || defined(_WIN64) 
+    /* does not exist on windows */
+    char * strndup( const char *s1, size_t n);
+    double round (float v);
+#    pragma warning (disable: 4244) // suspend warnings
+#endif // _WIN32 || _WIN64
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#endif /* __PLATFORM_H__ */

@@ -1,23 +1,12 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
-module Graphics.Rendering.FreeTypeGL.Internal.Shader(Shader(..), load) where
+module Graphics.Rendering.FreeTypeGL.Internal.Shader
+( getShaderPath
+) where
 
-import Foreign.C.String (CString, withCString)
-import Foreign.C.Types (CUInt(..))
+import Data.Monoid
+import Paths_FreeTypeGL (getDataFileName)
 
--- | A 'Shader' represents a GL program to render text. Needs to be
--- loaded just once for all fonts. Use
--- 'Graphics.Rendering.FreeTypeGL.newShader' to make one.
-newtype Shader = Shader CUInt
-
-foreign import ccall "shader_load"
-  c_shader_load :: CString -> CString -> IO CUInt
-
-load :: FilePath -> FilePath -> IO Shader
-load vertFilename fragFilename = do
-  shader <-
-    withCString vertFilename $ \vertPtr ->
-    withCString fragFilename $ \fragPtr ->
-    c_shader_load vertPtr fragPtr
-  case shader of
-    -1 -> fail $ "Failed to load shader: " ++ show (vertFilename, fragFilename)
-    _ -> return $ Shader shader
+getShaderPath :: String -> IO (FilePath, FilePath)
+getShaderPath name = do
+    vertName <- getDataFileName $ "src/shaders/" <> name <> ".vert"
+    fragName <- getDataFileName $ "src/shaders/" <> name <> ".frag"
+    return (vertName, fragName)

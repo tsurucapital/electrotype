@@ -31,22 +31,25 @@
  * policies, either expressed or implied, of Nicolas P. Rougier.
  * ============================================================================
  */
-#ifndef __OPEN_GL_H__
-#define __OPEN_GL_H__
+uniform sampler2D texture;
+uniform vec3 pixel;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
 
-#if defined(__APPLE__)
-#  ifdef GL_ES_VERSION_2_0
-#    include <OpenGLES/ES2/gl.h>
-#  else
-#    include <OpenGL/gl.h>
-#  endif
-#elif defined(_WIN32) || defined(_WIN64)
-#  define GLEW_STATIC
-#  include <GL/glew.h>
-#else
-#  define GL_GLEXT_PROTOTYPES
-#  include <GL/gl.h>
-#  include <GL/glext.h>
-#endif
 
-#endif /* OPEN_GL_H */
+attribute vec3 vertex;
+attribute vec4 color;
+attribute vec2 tex_coord;
+attribute float ashift;
+attribute float agamma;
+varying float vshift;
+varying float vgamma;
+void main()
+{
+    vshift = ashift;
+    vgamma = agamma;
+    gl_FrontColor = color;
+    gl_TexCoord[0].xy = tex_coord.xy;
+    gl_Position = projection*(view*(model*vec4(vertex,1.0)));
+}

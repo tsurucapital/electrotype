@@ -3,7 +3,7 @@ module Graphics.Rendering.FreeTypeGL.Internal.Font
 ) where
 
 import Control.Applicative
-import qualified Graphics.Rendering.FreeTypeGL.Internal.TextureFont as ITF
+import Graphics.Rendering.FreeTypeGL.Internal.TextureFont
 import Foreign.ForeignPtr
 
 -- Font:
@@ -12,13 +12,14 @@ import Foreign.ForeignPtr
 --
 -- For different face sizes, you must load different fonts.
 data Font = Font
-  { fFont :: ForeignPtr ITF.TextureFont
+  { fFont :: TextureFont
   } deriving (Eq, Ord, Show)
 
 -- | Load a 'Font' with a given size.
 loadFont
   :: FilePath -- ^ The font filename (e.g: \"foo.ttf\")
+  -> TextureAtlas
   -> Float    -- ^ The desired face-size
   -> IO Font  -- ^ The result loaded font
-loadFont fileName size = Font <$> ITF.new ITF.NotLCD fileName size
+loadFont fileName atlas size = Font <$> newTextureFont atlas fileName size
 

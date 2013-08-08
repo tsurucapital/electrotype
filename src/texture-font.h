@@ -34,13 +34,14 @@
 #ifndef __TEXTURE_FONT_H__
 #define __TEXTURE_FONT_H__
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_STROKER_H
+#include <stdlib.h>
 
-#include "vec234.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "vector.h"
-#include <stdbool.h>
+#include "texture-atlas.h"
 
 /**
  * @file   texture-font.h
@@ -59,7 +60,33 @@
  *   return 0;
  * }
  * @endcode
+ *
+ * @{
  */
+
+
+
+/**
+ * A structure that hold a kerning value relatively to a charcode.
+ *
+ * This structure cannot be used alone since the (necessary) right charcode is
+ * implicitely held by the owner of this structure.
+ */
+typedef struct
+{
+    /**
+     * Left character code in the kern pair.
+     */
+    wchar_t charcode;
+    
+    /**
+     * Kerning value (in fractional pixels).
+     */
+    float kerning;
+
+} kerning_t;
+
+
 
 
 /*
@@ -69,67 +96,172 @@
  *                       xmin                     xmax
  *                        |                         |
  *                        |<-------- width -------->|
- *                        |                         |
+ *                        |                         |    
  *              |         +-------------------------+----------------- ymax
  *              |         |    ggggggggg   ggggg    |     ^        ^
- *              |         |   g:::::::::ggg::::g    |     |        |
- *              |         |  g:::::::::::::::::g    |     |        |
- *              |         | g::::::ggggg::::::gg    |     |        |
- *              |         | g:::::g     g:::::g     |     |        |
- *    offset_x -|-------->| g:::::g     g:::::g     |  offset_y    |
- *              |         | g:::::g     g:::::g     |     |        |
- *              |         | g::::::g    g:::::g     |     |        |
- *              |         | g:::::::ggggg:::::g     |     |        |
+ *              |         |   g:::::::::ggg::::g    |     |        | 
+ *              |         |  g:::::::::::::::::g    |     |        | 
+ *              |         | g::::::ggggg::::::gg    |     |        | 
+ *              |         | g:::::g     g:::::g     |     |        | 
+ *    offset_x -|-------->| g:::::g     g:::::g     |  offset_y    | 
+ *              |         | g:::::g     g:::::g     |     |        | 
+ *              |         | g::::::g    g:::::g     |     |        | 
+ *              |         | g:::::::ggggg:::::g     |     |        |  
  *              |         |  g::::::::::::::::g     |     |      height
- *              |         |   gg::::::::::::::g     |     |        |
+ *              |         |   gg::::::::::::::g     |     |        | 
  *  baseline ---*---------|---- gggggggg::::::g-----*--------      |
- *            / |         |             g:::::g     |              |
- *     origin   |         | gggggg      g:::::g     |              |
- *              |         | g:::::gg   gg:::::g     |              |
- *              |         |  g::::::ggg:::::::g     |              |
- *              |         |   gg:::::::::::::g      |              |
- *              |         |     ggg::::::ggg        |              |
+ *            / |         |             g:::::g     |              | 
+ *     origin   |         | gggggg      g:::::g     |              | 
+ *              |         | g:::::gg   gg:::::g     |              | 
+ *              |         |  g::::::ggg:::::::g     |              | 
+ *              |         |   gg:::::::::::::g      |              | 
+ *              |         |     ggg::::::ggg        |              | 
  *              |         |         gggggg          |              v
  *              |         +-------------------------+----------------- ymin
  *              |                                   |
  *              |------------- advance_x ---------->|
  */
 
-enum texture_outline_type {
-    TEXTURE_OUTLINE_NONE = 0,
-    TEXTURE_OUTLINE_LINE = 1,
-    TEXTURE_OUTLINE_INNER = 2,
-    TEXTURE_OUTLINE_OUTER = 3,
-};
+/**
+ * A structure that describe a glyph.
+ */
+typedef struct
+{
+    /**
+     * Wide character this glyph represents
+     */
+    wchar_t charcode;
+
+    /**
+     * Glyph id (used for display lists)
+     */
+    unsigned int id;
+
+    /**
+     * Glyph's width in pixels.
+     */
+    size_t width;
+
+    /**
+     * Glyph's height in pixels.
+     */
+    size_t height;
+
+    /**
+     * Glyph's left bearing expressed in integer pixels.
+     */
+    int offset_x;
+
+    /**
+     * Glyphs's top bearing expressed in integer pixels.
+     *
+     * Remember that this is the distance from the baseline to the top-most
+     * glyph scanline, upwards y coordinates being positive.
+     */
+    int offset_y;
+
+    /**
+     * For horizontal text layouts, this is the horizontal distance (in
+     * fractional pixels) used to increment the pen position when the glyph is
+     * drawn as part of a string of text.
+     */
+    float advance_x;
+
+    /**
+     * For vertical text layouts, this is the vertical distance (in fractional
+     * pixels) used to increment the pen position when the glyph is drawn as
+     * part of a string of text.
+     */
+    float advance_y;
+
+    /**
+     * First normalized texture coordinate (x) of top-left corner
+     */
+    float s0;
+
+    /**
+     * Second normalized texture coordinate (y) of top-left corner
+     */
+    float t0;
+
+    /**
+     * First normalized texture coordinate (x) of bottom-right corner
+     */
+    float s1;
+
+    /**
+     * Second normalized texture coordinate (y) of bottom-right corner
+     */
+    float t1;
+
+    /**
+     * A vector of kerning pairs relative to this glyph.
+     */
+    vector_t * kerning;
+
+    /**
+     * Glyph outline type (0 = None, 1 = line, 2 = inner, 3 = outer)
+     */
+    int outline_type;
+
+    /**
+     * Glyph outline thickness
+     */
+    float outline_thickness;
+
+} texture_glyph_t;
+
+
 
 /**
  *  Texture font structure.
  */
 typedef struct
 {
+    /**
+     * Vector of glyphs contained in this font.
+     */
+    vector_t * glyphs;
 
-    bool is_lcd;
+    /**
+     * Atlas structure to store glyphs data.
+     */
+    texture_atlas_t * atlas;
+    
+    /**
+     * Font filename
+     */
+    char * filename;
 
-    /* TODO: Share a copy of the library between different fonts? */
-    FT_Library library;
-    FT_Face face;
-
+    /**
+     * Font size
+     */
+    float size;
+    
     /**
      * Whether to use autohint when rendering font
      */
     int hinting;
 
-    enum texture_outline_type outline_type;
+    /**
+     * Outline type (0 = None, 1 = line, 2 = inner, 3 = outer)
+     */
+    int outline_type;
 
     /**
      * Outline thickness
      */
     float outline_thickness;
 
-    /**
+    /** 
      * Whether to use our own lcd filter.
      */
     int filtering;
+
+    /**
+     * Whether to use kerning if available
+     */
+    int kerning;
 
     /**
      * LCD filter weights
@@ -187,44 +319,94 @@ typedef struct
 
 } texture_font_t;
 
-texture_font_t *texture_font_new(
-    bool is_lcd,
-    const char * filename,
-    const float size );
 
-void texture_font_delete( texture_font_t * self );
 
-typedef struct {
-    FT_Glyph ft_glyph; /* Only valid if outline_type is not
-                        * TEXTURE_OUTLINE_NONE */
-    FT_UInt glyph_index;
-    ivec2 bearing;
-    FT_Bitmap *bitmap;
-    vec2 advance;
-} texture_font_loaded_glyph_t;
+/**
+ * This function creates a new texture font from given filename and size.  The
+ * texture atlas is used to store glyph on demand. Note the depth of the atlas
+ * will determine if the font is rendered as alpha channel only (depth = 1) or
+ * RGB (depth = 3) that correspond to subpixel rendering (if available on your
+ * freetype implementation).
+ *
+ * @param atlas     A texture atlas
+ * @param filename  A font filename
+ * @param size      Size of font to be created (in points)
+ *
+ * @return A new empty font (no glyph inside yet)
+ *
+ */
+  texture_font_t *
+  texture_font_new( texture_atlas_t * atlas,
+                    const char * filename,
+                    const float size );
 
-int texture_font_load_glyph(
-    texture_font_t *self, wchar_t charcode, int is_lcd,
-    texture_font_loaded_glyph_t *out) __attribute__ ((warn_unused_result));
-void texture_font_done_glyph(
-    texture_font_t *self,
-    texture_font_loaded_glyph_t *loaded);
+
+/**
+ * Delete a texture font. Note that this does not delete the glyph from the
+ * texture atlas.
+ *
+ * @param self a valid texture font
+ */
+  void
+  texture_font_delete( texture_font_t * self );
+
+
+/**
+ * Request a new glyph from the font. If it has not been created yet, it will
+ * be. 
+ *
+ * @param self     A valid texture font
+ * @param charcode Character codepoint to be loaded.
+ *
+ * @return A pointer on the new glyph or 0 if the texture atlas is not big
+ *         enough
+ *
+ */
+  texture_glyph_t *
+  texture_font_get_glyph( texture_font_t * self,
+                          wchar_t charcode );
+
+
+/**
+ * Request the loading of several glyphs at once.
+ *
+ * @param self      a valid texture font
+ * @param charcodes character codepoints to be loaded.
+ *
+ * @return Number of missed glyph if the texture is not big enough to hold
+ *         every glyphs.
+ */
+  size_t
+  texture_font_load_glyphs( texture_font_t * self,
+                            const wchar_t * charcodes );
 
 /**
  * Get the kerning between two horizontal glyphs.
  *
  * @param self      a valid texture glyph
  * @param charcode  codepoint of the peceding glyph
- *
+ * 
  * @return x kerning value
  */
-float texture_font_get_kerning(
-    texture_font_t *,
-    FT_UInt glyph_index,
-    wchar_t prev_char);
+float 
+texture_glyph_get_kerning( const texture_glyph_t * self,
+                           const wchar_t charcode );
 
-int texture_font_get_text_size(
-    texture_font_t *,
-    wchar_t *text, vec2 *out_size) __attribute__ ((warn_unused_result));
+
+/**
+ * Creates a new empty glyph
+ *
+ * @return a new empty glyph (not valid)
+ */
+texture_glyph_t *
+texture_glyph_new( void );
+
+/** @} */
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __TEXTURE_FONT_H__ */
+

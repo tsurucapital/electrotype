@@ -44,10 +44,14 @@
 #ifndef __TEXTURE_ATLAS_H__
 #define __TEXTURE_ATLAS_H__
 
+#include <stdlib.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "vector.h"
 #include "vec234.h"
-#include "opengl.h"
-#include <stdbool.h>
 
 /**
  * @file   texture-atlas.h
@@ -75,12 +79,16 @@
  * texture_atlas_t * atlas = texture_atlas_new( 512, 512, 1 );
  *
  * // Allocates a region of 20x20
- * ivec4 region = texture_atlas_make_region( atlas, 20, 20, data, stride );
+ * ivec4 region = texture_atlas_get_region( atlas, 20, 20 );
+ *
+ * // Fill region with some data
+ * texture_atlas_set_region( atlas, region.x, region.y, region.width, region.height, data, stride )
  *
  * ...
  *
  * @endcode
  *
+ * @{
  */
 
 
@@ -94,7 +102,15 @@ typedef struct
      */
     vector_t * nodes;
 
-    ivec2 size;
+    /**
+     *  Width (in pixels) of the underlying texture
+     */
+    size_t width;
+
+    /**
+     * Height (in pixels) of the underlying texture
+     */
+    size_t height;
 
     /**
      * Depth (in bytes) of the underlying texture
@@ -111,17 +127,38 @@ typedef struct
      */
     unsigned int id;
 
+    /**
+     * Atlas data
+     */
     unsigned char * data;
-
-    bool uploaded;
 
 } texture_atlas_t;
 
 
 
-void texture_atlas_init( texture_atlas_t * self, const ivec2 *size, const size_t depth );
+/**
+ * Creates a new empty texture atlas.
+ *
+ * @param   width   width of the atlas
+ * @param   height  height of the atlas
+ * @param   depth   bit depth of the atlas
+ * @return          a new empty texture atlas.
+ *
+ */
+  texture_atlas_t *
+  texture_atlas_new( const size_t width,
+                     const size_t height,
+                     const size_t depth );
 
-void texture_atlas_fini( texture_atlas_t * self );
+
+/**
+ *  Deletes a texture atlas.
+ *
+ *  @param self a texture atlas structure
+ *
+ */
+  void
+  texture_atlas_delete( texture_atlas_t * self );
 
 
 /**
@@ -130,8 +167,8 @@ void texture_atlas_fini( texture_atlas_t * self );
  *  @param self a texture atlas structure
  *
  */
-void
-texture_atlas_upload( texture_atlas_t * self );
+  void
+  texture_atlas_upload( texture_atlas_t * self );
 
 
 /**
@@ -140,26 +177,49 @@ texture_atlas_upload( texture_atlas_t * self );
  *  @param self   a texture atlas structure
  *  @param width  width of the region to allocate
  *  @param height height of the region to allocate
- *  @param data   data to be uploaded into the specified region
- *  @param stride stride of the data
  *  @return       Coordinates of the allocated region
  *
  */
-ivec4 texture_atlas_make_region(
-    texture_atlas_t *, size_t width, size_t height,
-    const unsigned char *data,
-    size_t stride);
+  ivec4
+  texture_atlas_get_region( texture_atlas_t * self,
+                            const size_t width,
+                            const size_t height );
+
+
+/**
+ *  Upload data to the specified atlas region.
+ *
+ *  @param self   a texture atlas structure
+ *  @param x      x coordinate the region
+ *  @param y      y coordinate the region
+ *  @param width  width of the region
+ *  @param height height of the region
+ *  @param data   data to be uploaded into the specified region
+ *  @param stride stride of the data
+ *
+ */
+  void
+  texture_atlas_set_region( texture_atlas_t * self,
+                            const size_t x,
+                            const size_t y,
+                            const size_t width,
+                            const size_t height,
+                            const unsigned char *data,
+                            const size_t stride );
 
 /**
  *  Remove all allocated regions from the atlas.
  *
  *  @param self   a texture atlas structure
  */
-void texture_atlas_clear( texture_atlas_t * self );
+  void
+  texture_atlas_clear( texture_atlas_t * self );
 
 
-void texture_atlas_render(
-    texture_atlas_t * self, float x, float y,
-    float width, float height );
+/** @} */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __TEXTURE_ATLAS_H__ */

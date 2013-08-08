@@ -1,9 +1,9 @@
-/* ============================================================================
+/* =========================================================================
  * Freetype GL - A C OpenGL Freetype engine
  * Platform:    Any
  * WWW:         http://code.google.com/p/freetype-gl/
- * ----------------------------------------------------------------------------
- * Copyright 2011,2012 Nicolas P. Rougier. All rights reserved.
+ * -------------------------------------------------------------------------
+ * Copyright 2011 Nicolas P. Rougier. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,24 +29,15 @@
  * The views and conclusions contained in the software and documentation are
  * those of the authors and should not be interpreted as representing official
  * policies, either expressed or implied, of Nicolas P. Rougier.
- * ============================================================================
- */
-#ifndef __OPEN_GL_H__
-#define __OPEN_GL_H__
+ * ========================================================================= */
+uniform sampler2D texture;
+void main(void)
+{
+    vec3 color = vec3(0.0,0.0,0.0);
+    float dist = texture2D(texture, gl_TexCoord[0].st).a;
+    float width = fwidth(dist);
+    float alpha = smoothstep(0.5-width, 0.5+width, dist);
+    gl_FragColor = vec4(color, alpha);
+}
 
-#if defined(__APPLE__)
-#  ifdef GL_ES_VERSION_2_0
-#    include <OpenGLES/ES2/gl.h>
-#  else
-#    include <OpenGL/gl.h>
-#  endif
-#elif defined(_WIN32) || defined(_WIN64)
-#  define GLEW_STATIC
-#  include <GL/glew.h>
-#else
-#  define GL_GLEXT_PROTOTYPES
-#  include <GL/gl.h>
-#  include <GL/glext.h>
-#endif
 
-#endif /* OPEN_GL_H */

@@ -31,22 +31,14 @@
  * policies, either expressed or implied, of Nicolas P. Rougier.
  * ============================================================================
  */
-#ifndef __OPEN_GL_H__
-#define __OPEN_GL_H__
+#ifndef __FREETYPE_GL_H__
+#define __FREETYPE_GL_H__
 
-#if defined(__APPLE__)
-#  ifdef GL_ES_VERSION_2_0
-#    include <OpenGLES/ES2/gl.h>
-#  else
-#    include <OpenGL/gl.h>
-#  endif
-#elif defined(_WIN32) || defined(_WIN64)
-#  define GLEW_STATIC
-#  include <GL/glew.h>
-#else
-#  define GL_GLEXT_PROTOTYPES
-#  include <GL/gl.h>
-#  include <GL/glext.h>
-#endif
+/* Mandatory */
+#include "opengl.h"
+#include "vec234.h"
+#include "vector.h"
+#include "texture-atlas.h"
+#include "texture-font.h"
 
-#endif /* OPEN_GL_H */
+#endif /* FREETYPE_GL_H */

@@ -31,22 +31,87 @@
  * policies, either expressed or implied, of Nicolas P. Rougier.
  * ============================================================================
  */
-#ifndef __OPEN_GL_H__
-#define __OPEN_GL_H__
+#ifndef __MAT4_H__
+#define __MAT4_H__
 
-#if defined(__APPLE__)
-#  ifdef GL_ES_VERSION_2_0
-#    include <OpenGLES/ES2/gl.h>
-#  else
-#    include <OpenGL/gl.h>
-#  endif
-#elif defined(_WIN32) || defined(_WIN64)
-#  define GLEW_STATIC
-#  include <GL/glew.h>
-#else
-#  define GL_GLEXT_PROTOTYPES
-#  include <GL/gl.h>
-#  include <GL/glext.h>
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#endif /* OPEN_GL_H */
+
+/**
+ *
+ */
+typedef union
+{
+	float data[16];    /**< All compoments at once     */
+	struct {
+        float m00, m01, m02, m03;
+        float m10, m11, m12, m13;
+        float m20, m21, m22, m23;
+        float m30, m31, m32, m33;
+    };
+} mat4;
+
+
+mat4 *
+mat4_new( void );
+
+void
+mat4_set_identity( mat4 *self );
+
+void
+mat4_set_zero( mat4 *self );
+
+void
+mat4_multiply( mat4 *self, mat4 *other );
+
+void
+mat4_set_orthographic( mat4 *self,
+                       float left,   float right,
+                       float bottom, float top,
+                       float znear,  float zfar );
+
+void
+mat4_set_perspective( mat4 *self,
+                      float fovy,  float aspect,
+                      float zNear, float zFar);
+
+void
+mat4_set_frustum( mat4 *self,
+                  float left,   float right,
+                  float bottom, float top,
+                  float znear,  float zfar );
+
+void
+mat4_set_rotation( mat4 *self,
+                   float angle,
+                   float x, float y, float z);
+
+void
+mat4_set_translation( mat4 *self,
+                      float x, float y, float z);
+
+void
+mat4_set_scaling( mat4 *self,
+                  float x, float y, float z);
+
+void
+mat4_rotate( mat4 *self,
+             float angle,
+             float x, float y, float z);
+
+void
+mat4_translate( mat4 *self,
+                float x, float y, float z);
+
+void
+mat4_scale( mat4 *self,
+            float x, float y, float z);
+
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __MAT4_H__ */

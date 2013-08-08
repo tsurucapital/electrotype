@@ -34,6 +34,8 @@
 #ifndef __VECTOR_H__
 #define __VECTOR_H__
 
+#include <stdlib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -60,7 +62,7 @@ extern "C" {
  *   int i,j = 1;
  *   vector_t * vector = vector_new( sizeof(int) );
  *   vector_push_back( &i );
- *
+ * 
  *   j = * (int *) vector_get( vector, 0 );
  *   vector_delete( vector);
  *
@@ -327,7 +329,7 @@ typedef struct
  */
   void
   vector_push_back_data( vector_t *self,
-                         const void * data,
+                         const void * data, 
                          const size_t count );
 
 

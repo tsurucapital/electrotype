@@ -43,23 +43,19 @@ shader_read( const char *filename )
 {
     FILE * file;
     char * buffer;
-    size_t size;
+	size_t size;
 
     file = fopen( filename, "rb" );
     if( !file )
     {
         fprintf( stderr, "Unable to open file \"%s\".\n", filename );
-        return NULL;
+		return 0;
     }
-    fseek( file, 0, SEEK_END );
-    size = ftell( file );
-    fseek(file, 0, SEEK_SET );
-    buffer = (char *) malloc(size + 1);
-    size_t res = fread( buffer, 1, size, file );
-    if(res != size) {
-        fprintf( stderr, "Failed to read file \"%s\".\n Res=%zu", filename, res );
-        return NULL;
-    }
+	fseek( file, 0, SEEK_END );
+	size = ftell( file );
+	fseek(file, 0, SEEK_SET );
+    buffer = (char *) malloc( (size+1) * sizeof( char *) );
+	fread( buffer, sizeof(char), size, file );
     buffer[size] = 0;
     fclose( file );
     return buffer;
@@ -72,18 +68,18 @@ GLuint
 shader_compile( const char* source,
                 const GLenum type )
 {
+    GLint compile_status;
     GLuint handle = glCreateShader( type );
     glShaderSource( handle, 1, &source, 0 );
     glCompileShader( handle );
 
-    GLint compile_status;
     glGetShaderiv( handle, GL_COMPILE_STATUS, &compile_status );
-    if(GL_FALSE == compile_status)
+    if( compile_status == GL_FALSE )
     {
-        char messages[256];
-        glGetShaderInfoLog( handle, sizeof messages, 0, messages );
+        GLchar messages[256];
+        glGetShaderInfoLog( handle, sizeof(messages), 0, &messages[0] );
         fprintf( stderr, "%s\n", messages );
-        return (GLuint)-1;
+        exit( EXIT_FAILURE );
     }
     return handle;
 }
@@ -95,11 +91,11 @@ shader_load( const char * vert_filename,
               const char * frag_filename )
 {
     GLuint handle = glCreateProgram( );
+    GLint link_status;
 
     if( vert_filename && strlen( vert_filename ) )
     {
         char *vert_source = shader_read( vert_filename );
-        if (!vert_source) return (GLuint)-1;
         GLuint vert_shader = shader_compile( vert_source, GL_VERTEX_SHADER);
         glAttachShader( handle, vert_shader);
         free( vert_source );
@@ -107,41 +103,20 @@ shader_load( const char * vert_filename,
     if( frag_filename && strlen( frag_filename ) )
     {
         char *frag_source = shader_read( frag_filename );
-        if (!frag_source) return (GLuint)-1;
         GLuint frag_shader = shader_compile( frag_source, GL_FRAGMENT_SHADER);
         glAttachShader( handle, frag_shader);
         free( frag_source );
     }
 
     glLinkProgram( handle );
-    GLint link_status;
+
     glGetProgramiv( handle, GL_LINK_STATUS, &link_status );
     if (link_status == GL_FALSE)
     {
-        char messages[256];
+        GLchar messages[256];
         glGetProgramInfoLog( handle, sizeof(messages), 0, &messages[0] );
         fprintf( stderr, "%s\n", messages );
-        return (GLuint)-1;
+        exit(1);
     }
     return handle;
 }
-
-
-
-#if defined(_WIN32) || defined(_WIN64)
-#include "opengl.h"
-
-int freetypegl_init() {
-    GLenum err = glewInit();
-    if (GLEW_OK != err) {
-        fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-        return -1;
-    }
-    return 0;
-}
-
-#else
-
-int freetypegl_init() { return 0; }
-
-#endif

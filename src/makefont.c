@@ -33,50 +33,28 @@
  */
 #include "freetype-gl.h"
 
+#include <stdio.h>
+#include <wchar.h>
+
+#if defined(__APPLE__)
+    #include <Glut/glut.h>
+#elif defined(_WIN32) || defined(_WIN64)
+    #include <GLUT/glut.h>
+#else
+    #include <GL/glut.h>
+#endif
+
 // ---------------------------------------------------------------- display ---
 void display( void )
-{
-    int viewport[4];
-    glGetIntegerv( GL_VIEWPORT, viewport );
-    GLuint width  = viewport[2];
-    GLuint height = viewport[3];
-
-    glClearColor(1,1,1,1);
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-    glEnable( GL_BLEND );
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-    glEnable( GL_TEXTURE_2D );
-    glColor4f(0,0,0,1);
-    glBegin(GL_QUADS);
-    glTexCoord2f( 0, 1 ); glVertex2i( 0, 0 );
-    glTexCoord2f( 0, 0 ); glVertex2i( 0, height );
-    glTexCoord2f( 1, 0 ); glVertex2i( width, height );
-    glTexCoord2f( 1, 1 ); glVertex2i( width, 0 );
-    glEnd();
-    glutSwapBuffers( );
-}
-
+{}
 
 // ---------------------------------------------------------------- reshape ---
 void reshape(int width, int height)
-{
-    glViewport(0, 0, width, height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, width, 0, height, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glutPostRedisplay();
-}
-
+{}
 
 // --------------------------------------------------------------- keyboard ---
 void keyboard( unsigned char key, int x, int y )
-{
-    if ( key == 27 )
-    {
-        exit( 1 );
-    }
-}
+{}
 
 
 // ------------------------------------------------------------------- main ---
@@ -84,7 +62,7 @@ int main( int argc, char **argv )
 {
     size_t i, j;
 
-    wchar_t * font_cache =
+    wchar_t * font_cache = 
         L" !\"#$%&'()*+,-./0123456789:;<=>?"
         L"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
         L"`abcdefghijklmnopqrstuvwxyz{|}~";
@@ -95,7 +73,7 @@ int main( int argc, char **argv )
 
     texture_atlas_t * atlas = texture_atlas_new( 128, 128, 1 );
     texture_font_t  * font  = texture_font_new( atlas, font_filename, font_size );
-
+    
 
     glutInit( &argc, argv );
     glutInitWindowSize( atlas->width, atlas->height );
@@ -104,17 +82,16 @@ int main( int argc, char **argv )
     glutReshapeFunc( reshape );
     glutDisplayFunc( display );
     glutKeyboardFunc( keyboard );
-    glBindTexture( GL_TEXTURE_2D, atlas->id );
 
-    int missed = !!texture_font_load_glyphs( font, font_cache );
+    size_t missed = texture_font_load_glyphs( font, font_cache );
 
     wprintf( L"Font filename              : %s\n", font_filename );
     wprintf( L"Font size                  : %.1f\n", font_size );
     wprintf( L"Number of glyphs           : %ld\n", wcslen(font_cache) );
-    wprintf( L"Have missed glyphs         : %d\n", missed );
+    wprintf( L"Number of missed glyphs    : %ld\n", missed );
     wprintf( L"Texture size               : %ldx%ldx%ld\n",
              atlas->width, atlas->height, atlas->depth );
-    wprintf( L"Texture occupancy          : %.2f%%\n",
+    wprintf( L"Texture occupancy          : %.2f%%\n", 
             100.0*atlas->used/(float)(atlas->width*atlas->height) );
     wprintf( L"\n" );
     wprintf( L"Header filename            : %s\n", header_filename );
@@ -140,7 +117,7 @@ int main( int argc, char **argv )
     // -------------
     // Header
     // -------------
-    fwprintf( file,
+    fwprintf( file, 
         L"/* ============================================================================\n"
         L" * Freetype GL - A C OpenGL Freetype engine\n"
         L" * Platform:    Any\n"
@@ -181,6 +158,9 @@ int main( int argc, char **argv )
     // ----------------------
     fwprintf( file,
         L"#include <stddef.h>\n"
+        L"#ifdef __cplusplus\n"
+        L"extern \"C\" {\n"
+        L"#endif\n"
         L"\n"
         L"typedef struct\n"
         L"{\n"
@@ -217,7 +197,7 @@ int main( int argc, char **argv )
         L"} texture_font_t;\n\n", texture_size, glyph_count );
 
 
-
+    
     fwprintf( file, L"texture_font_t font = {\n" );
 
 
@@ -250,7 +230,7 @@ int main( int argc, char **argv )
     // -------------------
     // Texture information
     // -------------------
-    fwprintf( file, L" %f, %f, %f, %f, %f, %d, \n",
+    fwprintf( file, L" %ff, %ff, %ff, %ff, %ff, %d, \n", 
              font->size, font->height,
              font->linegap,font->ascender, font->descender,
              glyph_count );
@@ -271,9 +251,9 @@ int main( int argc, char **argv )
                  glyph->width, glyph->height );
         wprintf( L"  offset     : %+d%+d\n",
                  glyph->offset_x, glyph->offset_y );
-        wprintf( L"  advance    : %f, %f\n",
+        wprintf( L"  advance    : %ff, %ff\n",
                  glyph->advance_x, glyph->advance_y );
-        wprintf( L"  tex coords.: %f, %f, %f, %f\n",
+        wprintf( L"  tex coords.: %ff, %ff, %ff, %ff\n", 
                  glyph->u0, glyph->v0, glyph->u1, glyph->v1 );
 
         wprintf( L"  kerning    : " );
@@ -281,7 +261,7 @@ int main( int argc, char **argv )
         {
             for( j=0; j < glyph->kerning_count; ++j )
             {
-                wprintf( L"('%lc', %f)",
+                wprintf( L"('%lc', %ff)", 
                          glyph->kerning[j].charcode, glyph->kerning[j].kerning );
                 if( j < (glyph->kerning_count-1) )
                 {
@@ -303,7 +283,7 @@ int main( int argc, char **argv )
             fwprintf( file, L"  {L'\\%lc', ", glyph->charcode );
             //wprintf( L"  {L'\\%lc', ", glyph->charcode );
         }
-        else if( (glyph->charcode == (wchar_t)(-1) ) )
+        else if( glyph->charcode == (wchar_t)(-1) )
         {
             fwprintf( file, L"  {L'\\0', " );
             //wprintf( L"  {L'\\0', " );
@@ -315,8 +295,8 @@ int main( int argc, char **argv )
         }
         fwprintf( file, L"%d, %d, ", glyph->width, glyph->height );
         fwprintf( file, L"%d, %d, ", glyph->offset_x, glyph->offset_y );
-        fwprintf( file, L"%f, %f, ", glyph->advance_x, glyph->advance_y );
-        fwprintf( file, L"%f, %f, %f, %f, ", glyph->s0, glyph->t0, glyph->s1, glyph->t1 );
+        fwprintf( file, L"%ff, %ff, ", glyph->advance_x, glyph->advance_y );
+        fwprintf( file, L"%ff, %ff, %ff, %ff, ", glyph->s0, glyph->t0, glyph->s1, glyph->t1 );
         fwprintf( file, L"%d, ", vector_size(glyph->kerning) );
         fwprintf( file, L"{ " );
         for( j=0; j < vector_size(glyph->kerning); ++j )
@@ -326,11 +306,11 @@ int main( int argc, char **argv )
 
             if( (charcode == L'\'' ) || (charcode == L'\\') )
             {
-                fwprintf( file, L"{L'\\%lc', %f}", charcode, kerning->kerning );
+                fwprintf( file, L"{L'\\%lc', %ff}", charcode, kerning->kerning );
             }
             else if( (charcode != (wchar_t)(-1) ) )
             {
-                fwprintf( file, L"{L'%lc', %f}", charcode, kerning->kerning );
+                fwprintf( file, L"{L'%lc', %ff}", charcode, kerning->kerning );
             }
             if( j < (vector_size(glyph->kerning)-1))
             {
@@ -340,6 +320,11 @@ int main( int argc, char **argv )
         fwprintf( file, L"} },\n" );
     }
     fwprintf( file, L" }\n};\n" );
+
+    fwprintf( file,
+        L"#ifdef __cplusplus\n"
+        L"}\n"
+        L"#endif\n" );
 
     return 0;
 }

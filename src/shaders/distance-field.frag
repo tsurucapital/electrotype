@@ -1,9 +1,9 @@
-/* ============================================================================
+/* =========================================================================
  * Freetype GL - A C OpenGL Freetype engine
  * Platform:    Any
  * WWW:         http://code.google.com/p/freetype-gl/
- * ----------------------------------------------------------------------------
- * Copyright 2011,2012 Nicolas P. Rougier. All rights reserved.
+ * -------------------------------------------------------------------------
+ * Copyright 2011 Nicolas P. Rougier. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,24 +29,42 @@
  * The views and conclusions contained in the software and documentation are
  * those of the authors and should not be interpreted as representing official
  * policies, either expressed or implied, of Nicolas P. Rougier.
- * ============================================================================
- */
-#ifndef __OPEN_GL_H__
-#define __OPEN_GL_H__
+ * ========================================================================= */
+uniform sampler2D texture;
+       vec3 glyph_color    = vec3(1.0,1.0,1.0);
+const float glyph_center   = 0.50;
+       vec3 outline_color  = vec3(0.0,0.0,0.0);
+const float outline_center = 0.55;
+       vec3 glow_color     = vec3(1.0,1.0,1.0);
+const float glow_center    = 1.25;
+void main(void)
+{
+    vec4  color = texture2D(texture, gl_TexCoord[0].st);
+    float dist  = color.a;
+    float width = fwidth(dist);
+    float alpha = smoothstep(glyph_center-width, glyph_center+width, dist);
 
-#if defined(__APPLE__)
-#  ifdef GL_ES_VERSION_2_0
-#    include <OpenGLES/ES2/gl.h>
-#  else
-#    include <OpenGL/gl.h>
-#  endif
-#elif defined(_WIN32) || defined(_WIN64)
-#  define GLEW_STATIC
-#  include <GL/glew.h>
-#else
-#  define GL_GLEXT_PROTOTYPES
-#  include <GL/gl.h>
-#  include <GL/glext.h>
-#endif
+    // Smooth
+    // gl_FragColor = vec4(glyph_color, alpha);
 
-#endif /* OPEN_GL_H */
+    // Outline
+    // float mu = smoothstep(outline_center-width, outline_center+width, dist);
+    // vec3 rgb = mix(outline_color, glyph_color, mu);
+    // gl_FragColor = vec4(rgb, max(alpha,mu));
+
+    // Glow
+    //vec3 rgb = mix(glow_color, glyph_color, alpha);
+    //float mu = smoothstep(glyph_center, glow_center, sqrt(dist));
+    //gl_FragColor = vec4(rgb, max(alpha,mu));
+
+    // Glow + outline
+    vec3 rgb = mix(glow_color, glyph_color, alpha);
+    float mu = smoothstep(glyph_center, glow_center, sqrt(dist));
+    color = vec4(rgb, max(alpha,mu));
+    float beta = smoothstep(outline_center-width, outline_center+width, dist);
+    rgb = mix(outline_color, color.rgb, beta);
+    gl_FragColor = vec4(rgb, max(color.a,beta));
+
+}
+
+
