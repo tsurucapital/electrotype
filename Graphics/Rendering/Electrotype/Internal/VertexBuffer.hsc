@@ -1,5 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls, RecordWildCards, NamedFieldPuns #-}
-module Graphics.Rendering.FreeTypeGL.Internal.VertexBuffer
+module Graphics.Rendering.Electrotype.Internal.VertexBuffer
 ( VertexBuffer, newVertexBuffer, clearVertexBuffer
 , insertString, insertByteString, renderVertexBuffer
 ) where
@@ -11,7 +11,7 @@ import Foreign.C.String
 import Foreign.C.Types
 import Linear
 
-import Graphics.Rendering.FreeTypeGL.Internal.TextureFont
+import Graphics.Rendering.Electrotype.Internal.TextureFont
 import Graphics.Rendering.OpenGL.Raw.Core31 (GLenum)
 import Graphics.Rendering.OpenGL.GL.PrimitiveMode
 

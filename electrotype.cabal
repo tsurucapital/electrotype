@@ -1,26 +1,32 @@
-Name:                FreeTypeGL
-Version:             0.2.0.0
-Synopsis:            Loadable texture fonts for OpenGL.
+Name:                electrotype
+Version:             0.1.0.0
+Synopsis:            Reasonably fast text rendering in OpenGL.
 
-Description:         Render text in OpenGL using texture-mapped fonts.
+Description:         Use FreeType to render glyph bitmaps to textures, and
+                     then render to the screen using those textures.
                      .
-                     Similar to FTGL, but with fewer features (no
+                     Similar to FTGL in some ways, but with fewer features (no
                      mesh-from-font creation, no direct pixel rendering).
                      .
-                     This package is experimental, buggy, and unoptimized. It
-                     requires the OpenGL Compatibility profile, though a
-                     near-term goal is to make it function in the Core profile.
+                     This package is experimental. It was originally based on
+                     the FreeTypeGL package by by Eyal Lotem
+                     (<http://hackage.haskell.org/package/FreeTypeGL>) but has
+                     diverged significantly.
+                     .
+                     Windows builds may be broken. Contributions are welcome.
+                     .
+                     This package makes use of the great and ubiquitous
+                     FreeType library (<http://www.freetype.org/>) for glyph
+                     and font handling. The license is FTL.
 
 License:             BSD3
 License-file:        LICENSE
-Author:              Eyal Lotem <eyal.lotem@gmail.com>, Andrew Richards <randrew@gmail.com>
-Maintainer:          Eyal Lotem <eyal.lotem@gmail.com>, Andrew Richards <randrew@gmail.com>
+Author:              Andrew Richards <randrew@gmail.com>, Eyal Lotem <eyal.lotem@gmail.com>
+Maintainer:          Andrew Richards <randrew@gmail.com>
 Category:            Graphics
 Build-type:          Simple
 Extra-source-files:  src/*.[ch]
-                     src/demo/*.[ch]
                      src/fonts/*.ttf src/fonts/VERA-COPYRIGHT
-                     shaders/*.vert shaders/*.frag
                      windows/glew.c
                      windows/include/GL/glew.h windows/include/GL/wglew.h windows/include/GL/glxew.h
 Data-files:          shaders/text.frag shaders/text.vert
@@ -35,23 +41,21 @@ Flag use_font_config
 
 Library
   -- Modules exported by the library.
-  Exposed-modules: Graphics.Rendering.FreeTypeGL,
-                   Graphics.Rendering.FreeTypeGL.Internal.Shader,
-                   Graphics.Rendering.FreeTypeGL.Internal.TextureFont,
-                   Graphics.Rendering.FreeTypeGL.Internal.VertexBuffer,
-                   Graphics.Rendering.FreeTypeGL.Internal.Font
-  Other-modules:   Paths_FreeTypeGL
+  Exposed-modules: Graphics.Rendering.Electrotype,
+                   Graphics.Rendering.Electrotype.Internal.Shader,
+                   Graphics.Rendering.Electrotype.Internal.TextureFont,
+                   Graphics.Rendering.Electrotype.Internal.VertexBuffer
+  Other-modules:   Paths_electrotype
 
   -- Packages needed in order to build this package.
   -- "freetype2" and "OpenGL" deps are just for the C build side
-  Build-depends: base > 3 && < 5, bytestring, freetype2 >= 0.1.2, OpenGLRaw, OpenGL >= 2.8.0.0, data-default, linear
-
-  -- Modules not exported by this package.
-  -- Other-modules:
+  Build-depends: base > 3 && < 5, bytestring, freetype2 >= 0.1.2,
+                 OpenGLRaw, OpenGL >= 2.8.0.0, data-default, linear
 
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   Build-tools: hsc2hs
   ghc-options: -Wall
+  -- Disable assertions in the C code.
   cc-options: -DNDEBUG
   include-dirs: src
   if os(windows)
@@ -78,4 +82,4 @@ Library
 
 source-repository head
   type: git
-  location: git://github.com/randrew/FreeTypeGL.git
+  location: git://github.com/randrew/electrotype.git

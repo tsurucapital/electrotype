@@ -1,9 +1,9 @@
-module Graphics.Rendering.FreeTypeGL.Internal.Shader
+module Graphics.Rendering.Electrotype.Internal.Shader
 ( getShaderPath
 ) where
 
 import Data.Monoid
-import Paths_FreeTypeGL (getDataFileName)
+import Paths_electrotype (getDataFileName)
 
 getShaderPath :: String -> IO (FilePath, FilePath)
 getShaderPath name = do

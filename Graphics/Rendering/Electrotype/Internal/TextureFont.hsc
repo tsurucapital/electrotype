@@ -1,5 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls, RecordWildCards, NamedFieldPuns #-}
-module Graphics.Rendering.FreeTypeGL.Internal.TextureFont
+module Graphics.Rendering.Electrotype.Internal.TextureFont
 ( TextureAtlasRef, TextureAtlas(..), newTextureAtlas
 , getTextureAtlasId
 , TextureFontRef, TextureFont(..), newTextureFont
