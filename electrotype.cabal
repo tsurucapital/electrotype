@@ -24,14 +24,11 @@ License-file:        LICENSE
 Author:              Andrew Richards <randrew@gmail.com>, Eyal Lotem <eyal.lotem@gmail.com>
 Maintainer:          Andrew Richards <randrew@gmail.com>
 Category:            Graphics
-Build-type:          Simple
+Build-type:          Custom
 Extra-source-files:  src/*.[ch]
                      src/fonts/*.ttf src/fonts/VERA-COPYRIGHT
                      windows/glew.c
                      windows/include/GL/glew.h windows/include/GL/wglew.h windows/include/GL/glxew.h
-Data-files:          shaders/text.frag shaders/text.vert
-                     src/shaders/v3f-t2f-c4f.vert src/shaders/v3f-t2f-c4f.frag
-
 Cabal-version:       >=1.8
 
 Flag use_font_config
@@ -42,15 +39,15 @@ Flag use_font_config
 Library
   -- Modules exported by the library.
   Exposed-modules: Graphics.Rendering.Electrotype,
-                   Graphics.Rendering.Electrotype.Internal.Shader,
                    Graphics.Rendering.Electrotype.Internal.TextureFont,
-                   Graphics.Rendering.Electrotype.Internal.VertexBuffer
-  Other-modules:   Paths_electrotype
+                   Graphics.Rendering.Electrotype.Internal.VertexBuffer,
+                   Graphics.Rendering.Electrotype.Baked.Shaders
 
   -- Packages needed in order to build this package.
   -- "freetype2" and "OpenGL" deps are just for the C build side
   Build-depends: base > 3 && < 5, bytestring, freetype2 >= 0.1.2,
-                 OpenGLRaw, OpenGL >= 2.8.0.0, data-default, linear
+                 OpenGLRaw, OpenGL >= 2.8.0.0, data-default, linear, filepath,
+                 temporary
 
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   Build-tools: hsc2hs
