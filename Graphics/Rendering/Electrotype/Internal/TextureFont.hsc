@@ -1,6 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls, RecordWildCards, NamedFieldPuns #-}
 module Graphics.Rendering.Electrotype.Internal.TextureFont
-( TextureAtlasRef, TextureAtlas(..), newTextureAtlas
+( TextureAtlasRef, TextureAtlas(..)
+, newTextureAtlas, destroyTextureAtlas
 , getTextureAtlasId
 , TextureFontRef, TextureFont(..), newTextureFont
 , IsLCD(..), textureFontLoadGlyphsString
@@ -27,16 +28,20 @@ newtype TextureAtlas = TextureAtlas (ForeignPtr TextureAtlasRef)
 
 foreign import ccall unsafe "texture_atlas_new"
     c_texture_atlas_new :: CSize -> CSize -> CSize -> IO (Ptr TextureAtlasRef)
-foreign import ccall unsafe "&texture_atlas_delete"
-    c_texture_atlas_delete :: FunPtr (Ptr TextureAtlasRef -> IO ())
+foreign import ccall unsafe "texture_atlas_delete"
+    c_texture_atlas_delete :: Ptr TextureAtlasRef -> IO ()
 
 newTextureAtlas
     :: Int -> Int -> Int
     -> IO TextureAtlas
 newTextureAtlas width height depth = do
-    ref <- newForeignPtr c_texture_atlas_delete =<< c_texture_atlas_new
+    ref <- newForeignPtr_ =<< c_texture_atlas_new
         (fromIntegral width) (fromIntegral height) (fromIntegral depth)
     return (TextureAtlas ref)
+
+destroyTextureAtlas :: TextureAtlas -> IO ()
+destroyTextureAtlas (TextureAtlas atlas) =
+    withForeignPtr atlas c_texture_atlas_delete
 
 newtype TextureAtlasId = TextureAtlasId CUInt
 

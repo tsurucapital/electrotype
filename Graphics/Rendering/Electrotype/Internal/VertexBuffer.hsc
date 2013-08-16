@@ -1,7 +1,9 @@
 {-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls, RecordWildCards, NamedFieldPuns #-}
 module Graphics.Rendering.Electrotype.Internal.VertexBuffer
-( VertexBuffer, newVertexBuffer, clearVertexBuffer
-, insertString, insertByteString, renderVertexBuffer
+( VertexBuffer
+, newVertexBuffer, destroyVertexBuffer
+, clearVertexBuffer, insertString, insertByteString
+, renderVertexBuffer
 ) where
 
 import qualified Data.ByteString.Char8 as B
@@ -22,15 +24,19 @@ newtype VertexBuffer = VertexBuffer (ForeignPtr VertexBufferRef)
 
 foreign import ccall unsafe "vertex_buffer_new"
     c_vertex_buffer_new :: CString -> IO (Ptr VertexBufferRef)
-foreign import ccall unsafe "&vertex_buffer_delete"
-    c_vertex_buffer_delete :: FunPtr (Ptr VertexBufferRef -> IO ())
+foreign import ccall unsafe "vertex_buffer_delete"
+    c_vertex_buffer_delete :: Ptr VertexBufferRef -> IO ()
 foreign import ccall unsafe "vertex_buffer_clear"
     c_vertex_buffer_clear :: Ptr VertexBufferRef -> IO ()
 
 newVertexBuffer :: IO VertexBuffer
 newVertexBuffer = withCString "vertex:3f,tex_coord:2f,color:4f" $ \cstr -> do
-    ref <- newForeignPtr c_vertex_buffer_delete =<< c_vertex_buffer_new cstr
+    ref <- newForeignPtr_ =<< c_vertex_buffer_new cstr
     return (VertexBuffer ref)
+
+destroyVertexBuffer :: VertexBuffer -> IO ()
+destroyVertexBuffer (VertexBuffer ref) =
+    withForeignPtr ref c_vertex_buffer_delete
 
 clearVertexBuffer :: VertexBuffer -> IO ()
 clearVertexBuffer (VertexBuffer ref) =
