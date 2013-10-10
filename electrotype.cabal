@@ -66,6 +66,7 @@ Library
              src/font-manager.c
              src/mat4.c
              src/platform.c
+             src/shader.c
              src/text-buffer.c
              src/texture-atlas.c
              src/texture-font.c
