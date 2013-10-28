@@ -26,9 +26,7 @@ Maintainer:          Andrew Richards <randrew@gmail.com>
 Category:            Graphics
 Build-type:          Custom
 Extra-source-files:  src/*.[ch]
-                     src/fonts/*.ttf src/fonts/VERA-COPYRIGHT
-                     windows/glew.c
-                     windows/include/GL/glew.h windows/include/GL/wglew.h windows/include/GL/glxew.h
+                     windows/*.[ch]
 Cabal-version:       >=1.8
 
 Flag use_font_config
