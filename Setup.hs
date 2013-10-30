@@ -5,7 +5,7 @@ import System.FilePath
 
 internalPath, bakedPath, shadersDirPath :: FilePath
 internalPath = "Graphics" </> "Rendering" </> "Electrotype" </> "Internal"
-bakedPath = "Graphics" </> "Rendering" </> "Electrotype" </> "Baked"
+bakedPath = "include"
 shadersDirPath = "src" </> "shaders"
 
 readVertAndFrag :: String -> IO (String, String)
@@ -23,10 +23,9 @@ main = do
     defaultMainWithHooks $ simpleUserHooks
         { preBuild = \args buildflags -> do
             putStrLn "Baking shader strings..."
-            template <- readFile $ bakedPath </> "Shaders.hs_template"
             shader1 <- readVertAndFrag "v3f-t2f-c4f"
-            writeFile (bakedPath </> "Shaders.hs") $
-                template ++ showVertAndFrag "v3ft2fc4f" shader1
+            writeFile (bakedPath </> "baked.inc") $
+                showVertAndFrag "v3ft2fc4f" shader1
 
             (preBuild simpleUserHooks) args buildflags
         }

@@ -14,8 +14,8 @@ import Foreign.C.Types
 import Linear
 
 import Graphics.Rendering.Electrotype.Internal.TextureFont
-import Graphics.Rendering.OpenGL.Raw.Core31 (GLenum)
-import Graphics.Rendering.OpenGL.GL.PrimitiveMode
+import Graphics.Rendering.OpenGL.Raw.Core31 (GLenum, gl_TRIANGLES)
+import Graphics.Rendering.OpenGL.GL.BeginEnd
 
 #include "vertex-buffer.h"
 
@@ -101,4 +101,4 @@ foreign import ccall unsafe "vertex_buffer_render"
 
 renderVertexBuffer :: VertexBuffer -> IO ()
 renderVertexBuffer (VertexBuffer ref) = withForeignPtr ref $ \ptr ->
-    c_vertex_buffer_render ptr (marshalPrimitiveMode Triangles)
+    c_vertex_buffer_render ptr gl_TRIANGLES
