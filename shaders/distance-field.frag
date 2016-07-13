@@ -1,3 +1,4 @@
+#version 400
 /* =========================================================================
  * Freetype GL - A C OpenGL Freetype engine
  * Platform:    Any
@@ -66,5 +67,3 @@ void main(void)
     gl_FragColor = vec4(rgb, max(color.a,beta));
 
 }
-
-

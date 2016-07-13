@@ -1,3 +1,4 @@
+#version 400
 /* ============================================================================
  * Freetype GL - A C OpenGL Freetype engine
  * Platform:    Any
