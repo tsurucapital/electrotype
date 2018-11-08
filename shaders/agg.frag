@@ -1,4 +1,3 @@
-#version 400
 /* =========================================================================
  * Freetype GL - A C OpenGL Freetype engine
  * Platform:    Any
@@ -130,7 +129,7 @@ void main() {
         r = mix(current.r, previous.b, z);
         g = mix(current.g, current.r,  z);
         b = mix(current.b, current.g,  z);
-    }
+    } 
     else if( m <= 0.666 )
     {
         float z = (m-0.33)/0.333;
@@ -152,6 +151,6 @@ void main() {
     // r = color.r;
     // g = color.g;
     // b = color.b;
-
+    
     gl_FragColor.rgb = pow( vec3(r,g,b), vec3(1.0/gamma));
 }

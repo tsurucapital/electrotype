@@ -31,7 +31,7 @@
  * policies, either expressed or implied, of Nicolas P. Rougier.
  * ============================================================================
  */
-#include <ft2build.h>
+#include <freetype2/ft2build.h>
 #include FT_FREETYPE_H
 #include FT_STROKER_H
 // #include FT_ADVANCES_H
