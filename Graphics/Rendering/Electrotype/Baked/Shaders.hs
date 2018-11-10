@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 module Graphics.Rendering.Electrotype.Baked.Shaders
 ( withTempShaderPaths, v3ft2fc4fVert, v3ft2fc4fFrag
+, simple2dVert, simple2dFrag
 ) where
 
 import System.FilePath ((</>))
@@ -14,5 +15,5 @@ withTempShaderPaths f = withSystemTempDirectory "electrotype_shaders" $ \tmpPath
     writeFile fragPath v3ft2fc4fFrag
     f tmpPath (vertPath, fragPath)
 
-v3ft2fc4fVert, v3ft2fc4fFrag :: String
+v3ft2fc4fVert, v3ft2fc4fFrag, simple2dVert, simple2dFrag :: String
 #include "baked.inc"

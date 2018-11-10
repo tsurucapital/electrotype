@@ -3,7 +3,7 @@
 void vertex_buffer_add_text( vertex_buffer_t * buffer, texture_font_t * font,
                wchar_t * text, vec4 * color, vec2 * pen )
 {
-    size_t i;
+    size_t i = 0;
     float r = color->red, g = color->green, b = color->blue, a = color->alpha;
     for( i=0; i<wcslen(text); ++i )
     {
@@ -38,7 +38,7 @@ void vertex_buffer_add_text( vertex_buffer_t * buffer, texture_font_t * font,
 void vertex_buffer_add_char8_len( vertex_buffer_t * buffer, texture_font_t * font,
                char * text, size_t len, vec4 * color, vec2 * pen )
 {
-    size_t i;
+    size_t i = 0;
     float r = color->red, g = color->green, b = color->blue, a = color->alpha;
     for( i=0; i<len; ++i )
     {
@@ -68,4 +68,57 @@ void vertex_buffer_add_char8_len( vertex_buffer_t * buffer, texture_font_t * fon
             pen->x += glyph->advance_x;
         }
     }
+}
+
+float measure_horizontal_text(texture_font_t* font, wchar_t* text)
+{
+    float width = 0.0f;
+    size_t len = wcslen(text);
+    size_t i = 0;
+
+    if (len < 1) return width;
+
+    {
+        texture_glyph_t* glyph = texture_font_get_glyph(font, text[i]);
+        if (glyph != NULL)
+        {
+            width += glyph->advance_x;
+        }
+    }
+
+    for (i = 1; i < len; i++)
+    {
+        texture_glyph_t* glyph = texture_font_get_glyph(font, text[i]);
+        if (glyph == NULL) continue;
+        width += texture_glyph_get_kerning(glyph, text[i - 1]);
+        width += glyph->advance_x;
+    }
+
+    return width;
+}
+
+float measure_horizontal_char8_len(texture_font_t* font, char* text, size_t len)
+{
+    float width = 0.0f;
+    size_t i = 0;
+
+    if (len < 1) return width;
+
+    {
+        texture_glyph_t* glyph = texture_font_get_glyph(font, text[i]);
+        if (glyph != NULL)
+        {
+            width += glyph->advance_x;
+        }
+    }
+
+    for (i = 1; i < len; i++)
+    {
+        texture_glyph_t* glyph = texture_font_get_glyph(font, text[i]);
+        if (glyph == NULL) continue;
+        width += texture_glyph_get_kerning(glyph, text[i - 1]);
+        width += glyph->advance_x;
+    }
+
+    return width;
 }
