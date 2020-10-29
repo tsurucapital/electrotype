@@ -33,6 +33,13 @@ Flag use_font_config
   Description: Build with fontconfig support
   Default: False
 
+custom-setup
+  setup-depends:
+    base >= 4.6,
+    directory,
+    filepath,
+    Cabal >= 1.8 && < 3.4
+
 Library
   -- Modules exported by the library.
   Exposed-modules: Graphics.Rendering.Electrotype,
