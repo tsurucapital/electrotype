@@ -25,7 +25,7 @@ License-file:        LICENSE
 Author:              Andrew Richards <randrew@gmail.com>, Eyal Lotem <eyal.lotem@gmail.com>
 Maintainer:          Andrew Richards <randrew@gmail.com>
 Category:            Graphics
-Build-type:          Custom
+Build-type:          Simple
 
 Extra-source-files:
   src/*.c,
@@ -37,11 +37,6 @@ Flag use_font_config
 -- problematic on windows
   Description: Build with fontconfig support
   Default: False
-
-custom-setup
-  setup-depends:
-    base >= 4.6,
-    Cabal >= 1.8 && < 4,
 
 Library
   -- Modules exported by the library.
