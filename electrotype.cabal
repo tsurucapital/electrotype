@@ -25,7 +25,11 @@ Author:              Andrew Richards <randrew@gmail.com>, Eyal Lotem <eyal.lotem
 Maintainer:          Andrew Richards <randrew@gmail.com>
 Category:            Graphics
 Build-type:          Custom
-Extra-source-files:  src/*.c src/*.h
+Extra-source-files:
+  src/*.c,
+  src/*.h,
+  src/shaders/*.vert,
+  src/shaders/*.frag
 Cabal-version:       >=1.8
 
 Flag use_font_config
@@ -36,7 +40,9 @@ Flag use_font_config
 custom-setup
   setup-depends:
     base >= 4.6,
-    Cabal >= 1.8 && < 4
+    Cabal >= 1.8 && < 4,
+    directory,
+    filepath
 
 Library
   -- Modules exported by the library.
