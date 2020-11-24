@@ -17,7 +17,6 @@ import Linear
 
 import Graphics.Rendering.Electrotype.Internal.TextureFont
 import Graphics.GL.Core31
-import Graphics.Rendering.OpenGL.GL.BeginEnd
 
 #include "vertex-buffer.h"
 
@@ -87,7 +86,7 @@ insertString (VertexBuffer vertexRef) (TextureFont _ fontRef) str color pos =
     with color $ \colorPtr ->
     with pos $ \posPtr ->
     withCWString str $ \cwstr -> do
-    c_vertex_buffer_add_text vertexPtr fontPtr cwstr colorPtr posPtr 
+    c_vertex_buffer_add_text vertexPtr fontPtr cwstr colorPtr posPtr
     peek posPtr
 
 measureByteStringWidth :: TextureFont -> B.ByteString -> IO Float
@@ -115,7 +114,7 @@ insertByteString (VertexBuffer vertexRef) (TextureFont _ fontRef) str color pos 
     with color $ \colorPtr ->
     with pos $ \posPtr ->
     B.unsafeUseAsCStringLen str $ \(charPtr, len) -> do
-    c_vertex_buffer_add_char8_len vertexPtr fontPtr charPtr (fromIntegral len) colorPtr posPtr 
+    c_vertex_buffer_add_char8_len vertexPtr fontPtr charPtr (fromIntegral len) colorPtr posPtr
     peek posPtr
 
 foreign import ccall unsafe "vertex_buffer_render"

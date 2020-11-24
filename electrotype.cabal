@@ -1,3 +1,4 @@
+Cabal-version:       3.0
 Name:                electrotype
 Version:             0.1.1.0
 Synopsis:            Reasonably fast text rendering in OpenGL.
@@ -19,18 +20,18 @@ Description:         Use FreeType to render glyph bitmaps to textures, and
                      FreeType library (<http://www.freetype.org/>) for glyph
                      and font handling. The license is FTL.
 
-License:             BSD3
+License:             BSD-3-Clause
 License-file:        LICENSE
 Author:              Andrew Richards <randrew@gmail.com>, Eyal Lotem <eyal.lotem@gmail.com>
 Maintainer:          Andrew Richards <randrew@gmail.com>
 Category:            Graphics
 Build-type:          Custom
+
 Extra-source-files:
   src/*.c,
   src/*.h,
   src/shaders/*.vert,
   src/shaders/*.frag
-Cabal-version:       >=1.8
 
 Flag use_font_config
 -- problematic on windows
@@ -41,8 +42,6 @@ custom-setup
   setup-depends:
     base >= 4.6,
     Cabal >= 1.8 && < 4,
-    directory,
-    filepath
 
 Library
   -- Modules exported by the library.
@@ -50,19 +49,26 @@ Library
                    Graphics.Rendering.Electrotype.Internal.TextureFont,
                    Graphics.Rendering.Electrotype.Internal.VertexBuffer,
                    Graphics.Rendering.Electrotype.Baked.Shaders
+  other-modules:
+    Graphics.Rendering.Electrotype.Baked.Shaders.TH
 
   -- Packages needed in order to build this package.
   -- "freetype2" and "OpenGL" deps are just for the C build side
   Build-depends: base > 3 && < 5, bytestring, freetype2 >= 0.1.2,
                  OpenGLRaw, OpenGL >= 2.9.0.0, data-default-class, linear, filepath,
-                 temporary
+                 temporary, template-haskell
+
+  default-language: Haskell2010
 
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
-  Build-tools: hsc2hs
+  build-tool-depends:
+    , hsc2hs:hsc2hs
+  -- includes:
+  --   , include/baked.inc
   ghc-options: -Wall
   -- Disable assertions in the C code.
   cc-options: -DNDEBUG
-  include-dirs: src include /usr/include/freetype2
+  include-dirs: src /usr/include/freetype2
 
   if flag(use_font_config)
     cc-options: -DUSE_FONT_CONFIG
